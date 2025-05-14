@@ -97,44 +97,46 @@ export const FreezerManager: React.FC = () => {
                 <Grid container spacing={3}>
                     {/* Search and Filter Section */}
                     <Grid item xs={12}>
-                        <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                placeholder="Buscar item..."
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        performSearch();
-                                    }
-                                }}
-                                InputProps={{
-                                    endAdornment: (
-                                        <IconButton 
-                                            onClick={performSearch}
-                                            edge="end"
-                                        >
-                                            <SearchIcon sx={{ color: 'text.secondary' }} />
-                                        </IconButton>
-                                    )
-                                }}
-                            />
-                            <FormControl sx={{ minWidth: 200 }}>
-                                <InputLabel>Categoria</InputLabel>
-                                <Select
-                                    value={selectedCategory}
-                                    onChange={handleCategoryChange}
-                                    label="Categoria"
-                                >
-                                    <MenuItem value="">Todas</MenuItem>
-                                    {Object.values(FoodCategory).map((category) => (
-                                        <MenuItem key={category} value={category}>
-                                            {category}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                        <Paper sx={{ p: 2 }}>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    placeholder="Buscar item..."
+                                    value={searchTerm}
+                                    onChange={handleSearch}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            performSearch();
+                                        }
+                                    }}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <IconButton 
+                                                onClick={performSearch}
+                                                edge="end"
+                                            >
+                                                <SearchIcon sx={{ color: 'text.secondary' }} />
+                                            </IconButton>
+                                        )
+                                    }}
+                                />
+                                <FormControl sx={{ minWidth: 200 }}>
+                                    <InputLabel>Categoria</InputLabel>
+                                    <Select
+                                        value={selectedCategory}
+                                        onChange={handleCategoryChange}
+                                        label="Categoria"
+                                    >
+                                        <MenuItem value="">Todas</MenuItem>
+                                        {Object.values(FoodCategory).map((category) => (
+                                            <MenuItem key={category} value={category}>
+                                                {category}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Box>
                         </Paper>
                     </Grid>
 
