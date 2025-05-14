@@ -27,6 +27,7 @@ export const FreezerManager: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<FoodCategory | ''>('');
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<FoodItem | undefined>(undefined);
+    const [showResults, setShowResults] = useState(false);
 
     useEffect(() => {
         fetchItems();
@@ -35,13 +36,18 @@ export const FreezerManager: React.FC = () => {
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const term = event.target.value;
         setSearchTerm(term);
-        setFilters({ searchTerm: term, category: selectedCategory || undefined });
+        setShowResults(false);
     };
 
     const handleCategoryChange = (event: any) => {
         const category = event.target.value as FoodCategory | '';
         setSelectedCategory(category);
-        setFilters({ searchTerm, category: category || undefined });
+        setShowResults(false);
+    };
+
+    const performSearch = () => {
+        setFilters({ searchTerm, category: selectedCategory || undefined });
+        setShowResults(true);
     };
 
     const handleOpenAddDialog = () => {
@@ -92,31 +98,28 @@ export const FreezerManager: React.FC = () => {
                     {/* Search and Filter Section */}
                     <Grid item xs={12}>
                         <Paper sx={{ p: 2, display: 'flex', gap: 2 }}>
-                            <Box sx={{ display: 'flex', flexGrow: 1, gap: 1 }}>
-                                <TextField
-                                    fullWidth
-                                    variant="outlined"
-                                    placeholder="Buscar item..."
-                                    value={searchTerm}
-                                    onChange={handleSearch}
-                                    InputProps={{
-                                        startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                                    }}
-                                />
-                                <IconButton 
-                                    color="primary" 
-                                    onClick={() => setFilters({ searchTerm, category: selectedCategory || undefined })}
-                                    sx={{ 
-                                        bgcolor: 'primary.main',
-                                        color: 'white',
-                                        '&:hover': {
-                                            bgcolor: 'primary.dark',
-                                        }
-                                    }}
-                                >
-                                    <SearchIcon />
-                                </IconButton>
-                            </Box>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                placeholder="Buscar item..."
+                                value={searchTerm}
+                                onChange={handleSearch}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                        performSearch();
+                                    }
+                                }}
+                                InputProps={{
+                                    endAdornment: (
+                                        <IconButton 
+                                            onClick={performSearch}
+                                            edge="end"
+                                        >
+                                            <SearchIcon sx={{ color: 'text.secondary' }} />
+                                        </IconButton>
+                                    )
+                                }}
+                            />
                             <FormControl sx={{ minWidth: 200 }}>
                                 <InputLabel>Categoria</InputLabel>
                                 <Select
@@ -134,6 +137,65 @@ export const FreezerManager: React.FC = () => {
                             </FormControl>
                         </Paper>
                     </Grid>
+
+                    {/* Search Results Section */}
+                    {showResults && (
+                        <Grid item xs={12}>
+                            <Paper sx={{ p: 2 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Resultados da Busca
+                                </Typography>
+                                {loading ? (
+                                    <Typography>Buscando...</Typography>
+                                ) : (
+                                    <>
+                                        {filteredItems().length > 0 ? (
+                                            <Grid container spacing={2}>
+                                                {filteredItems().map((item) => (
+                                                    <Grid item xs={12} sm={6} md={4} key={item.id}>
+                                                        <Paper 
+                                                            sx={{ 
+                                                                p: 2, 
+                                                                display: 'flex', 
+                                                                flexDirection: 'column',
+                                                                height: '100%',
+                                                                cursor: 'pointer',
+                                                                '&:hover': {
+                                                                    bgcolor: 'action.hover'
+                                                                }
+                                                            }}
+                                                            onClick={() => handleEditItem(item)}
+                                                        >
+                                                            <Typography variant="h6">{item.name}</Typography>
+                                                            <Typography color="text.secondary">
+                                                                {item.category}
+                                                            </Typography>
+                                                            <Typography>
+                                                                Quantidade: {item.quantity}
+                                                            </Typography>
+                                                            <Typography>
+                                                                Gaveta: {item.location.drawer}
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+                                                ))}
+                                            </Grid>
+                                        ) : (
+                                            <Box sx={{ 
+                                                textAlign: 'center', 
+                                                py: 4,
+                                                color: 'text.secondary'
+                                            }}>
+                                                <Typography variant="h6">
+                                                    Opa! Parece que o seu freezer não possui isso :(
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </>
+                                )}
+                            </Paper>
+                        </Grid>
+                    )}
 
                     {/* Recent Items Section */}
                     <Grid item xs={12}>
@@ -178,50 +240,6 @@ export const FreezerManager: React.FC = () => {
                                     </Grid>
                                 ))}
                             </Grid>
-                        </Paper>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Divider sx={{ my: 2 }} />
-                    </Grid>
-
-                    {/* Items Grid */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Todos os Itens
-                            </Typography>
-                            {loading ? (
-                                <Typography>Carregando...</Typography>
-                            ) : error ? (
-                                <Typography color="error">{error}</Typography>
-                            ) : (
-                                <Grid container spacing={2}>
-                                    {filteredItems().map((item) => (
-                                        <Grid item xs={12} sm={6} md={4} key={item.id}>
-                                            <Paper 
-                                                sx={{ 
-                                                    p: 2, 
-                                                    display: 'flex', 
-                                                    flexDirection: 'column',
-                                                    height: '100%'
-                                                }}
-                                            >
-                                                <Typography variant="h6">{item.name}</Typography>
-                                                <Typography color="text.secondary">
-                                                    {item.category}
-                                                </Typography>
-                                                <Typography>
-                                                    Quantidade: {item.quantity}
-                                                </Typography>
-                                                <Typography>
-                                                    Gaveta: {item.location.drawer}
-                                                </Typography>
-                                            </Paper>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            )}
                         </Paper>
                     </Grid>
                 </Grid>
