@@ -13,8 +13,10 @@ import {
     MenuItem,
     Grid,
     Alert,
-    Box
+    Box,
+    IconButton
 } from '@mui/material';
+import { AddCircleOutline, RemoveCircleOutline } from '@mui/icons-material';
 import { FoodItem } from '../types';
 import { useFreezerStore } from '../store/freezerStore';
 import { useCategoryStore } from '../store/categoryStore';
@@ -65,15 +67,33 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
     }, [open, initialData]);
 
     const handleChange = (field: keyof FoodItem, value: any) => {
-        if (field === 'quantity' && value < 0) {
-            setError('A quantidade não pode ser menor que zero');
-            return;
+        let newQuantity = value;
+        if (field === 'quantity') {
+            newQuantity = parseInt(value, 10);
+            if (isNaN(newQuantity)) newQuantity = 0;
+            if (newQuantity < 0) {
+                setError('A quantidade não pode ser menor que zero');
+                return;
+            }
         }
         setError(null);
         setFormData(prev => ({
             ...prev,
-            [field]: value
+            [field]: field === 'quantity' ? newQuantity : value
         }));
+    };
+
+    const handleQuantityChange = (amount: number) => {
+        const currentQuantity = Number(formData.quantity);
+        let newQuantity = currentQuantity + amount;
+
+        if (newQuantity < 0) {
+            newQuantity = 0;
+            setError('A quantidade não pode ser menor que zero');
+        } else {
+            setError(null);
+        }
+        setFormData(prev => ({ ...prev, quantity: newQuantity }));
     };
 
     const handleSubmit = async () => {
@@ -161,18 +181,46 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={6}>
-                            <TextField
-                                fullWidth
-                                type="number"
-                                label="Quantidade"
-                                value={formData.quantity}
-                                onChange={(e) => handleChange('quantity', parseInt(e.target.value))}
-                                inputProps={{ min: 0 }}
-                                error={!!error && error.includes('quantidade')}
-                                helperText={error && error.includes('quantidade') ? error : ''}
-                                sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' }, '& .MuiInputBase-input': { fontSize: '1.1rem' } }}
-                            />
+                        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <IconButton 
+                                    aria-label="diminuir quantidade"
+                                    onClick={() => handleQuantityChange(-1)}
+                                    disabled={formData.quantity <= 0}
+                                    color="error"
+                                    sx={{ 
+                                        p: 1.5
+                                    }}
+                                >
+                                    <RemoveCircleOutline fontSize="large" />
+                                </IconButton>
+                                <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Quantidade"
+                                    value={formData.quantity}
+                                    onChange={(e) => handleChange('quantity', e.target.value)}
+                                    inputProps={{ min: 0, style: { textAlign: 'center' } }}
+                                    error={!!error && error.includes('quantidade')}
+                                    helperText={error && error.includes('quantidade') ? error : ''}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': { minHeight: '56px', maxWidth: '100px' },
+                                        '& .MuiInputBase-input': { fontSize: '1.2rem', fontWeight: 'bold' },
+                                        flexGrow: 1,
+                                        minWidth: '80px'
+                                    }}
+                                />
+                                <IconButton 
+                                    aria-label="aumentar quantidade"
+                                    onClick={() => handleQuantityChange(1)}
+                                    color="success"
+                                    sx={{ 
+                                        p: 1.5
+                                    }}
+                                >
+                                    <AddCircleOutline fontSize="large" />
+                                </IconButton>
+                            </Box>
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
