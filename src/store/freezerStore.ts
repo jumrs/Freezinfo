@@ -13,11 +13,13 @@ interface FreezerState {
         searchTerm?: string;
         category?: string;
     };
+    lastSelectedCategory: string;
     fetchItems: () => Promise<void>;
     addFoodItem: (item: FoodItem) => Promise<void>;
     updateFoodItem: (item: FoodItem) => Promise<void>;
     deleteFoodItem: (id: string) => Promise<void>;
     setFilters: (filters: { searchTerm?: string; category?: string }) => void;
+    setLastSelectedCategory: (category: string) => void;
     filteredItems: () => FoodItem[];
 }
 
@@ -32,6 +34,7 @@ export const useFreezerStore = create<FreezerState>((set, get) => {
         loading: false,
         error: null,
         filters: {},
+        lastSelectedCategory: '',
 
         fetchItems: async () => {
             set({ loading: true, error: null });
@@ -76,6 +79,13 @@ export const useFreezerStore = create<FreezerState>((set, get) => {
 
         setFilters: (filters) => {
             set({ filters });
+            if (filters.category) {
+                set({ lastSelectedCategory: filters.category });
+            }
+        },
+
+        setLastSelectedCategory: (category) => {
+            set({ lastSelectedCategory: category });
         },
 
         filteredItems: () => {

@@ -25,10 +25,10 @@ import { FoodItemForm } from './FoodItemForm';
 import { CategoryManager } from './CategoryManager';
 
 export const FreezerManager: React.FC = () => {
-    const { filteredItems, setFilters, loading, error, items, fetchItems } = useFreezerStore();
+    const { filteredItems, setFilters, loading, error, items, fetchItems, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
     const { categories } = useCategoryStore();
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('');
+    const [selectedCategory, setSelectedCategory] = useState<string>(lastSelectedCategory);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<FoodItem | undefined>(undefined);
@@ -37,6 +37,10 @@ export const FreezerManager: React.FC = () => {
     useEffect(() => {
         fetchItems();
     }, [fetchItems]);
+
+    useEffect(() => {
+        setSelectedCategory(lastSelectedCategory);
+    }, [lastSelectedCategory]);
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const term = event.target.value;
@@ -47,12 +51,16 @@ export const FreezerManager: React.FC = () => {
     const handleCategoryChange = (event: any) => {
         const category = event.target.value as string;
         setSelectedCategory(category);
+        setLastSelectedCategory(category);
         setShowResults(false);
     };
 
     const performSearch = () => {
         setFilters({ searchTerm, category: selectedCategory || undefined });
         setShowResults(true);
+        if (selectedCategory) {
+            setLastSelectedCategory(selectedCategory);
+        }
     };
 
     const handleOpenAddDialog = () => {

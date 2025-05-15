@@ -27,37 +27,38 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
     onClose,
     initialData
 }) => {
-    const { addFoodItem, updateFoodItem } = useFreezerStore();
+    const { addFoodItem, updateFoodItem, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
     const { categories } = useCategoryStore();
+    const defaultFormData = {
+        name: '',
+        category: lastSelectedCategory || categories[0]?.id || '',
+        quantity: 1,
+        location: { drawer: 1, section: 'A' },
+        dateAdded: new Date().toISOString(),
+        notes: ''
+    };
+
     const [formData, setFormData] = useState<Partial<FoodItem>>(
-        initialData || {
-            name: '',
-            category: categories[0]?.id || FoodCategory.CARNES,
-            quantity: 1,
-            location: { drawer: 1, section: 'A' },
-            dateAdded: new Date().toISOString(),
-        }
+        initialData || defaultFormData
     );
 
     useEffect(() => {
         if (open) {
             setFormData(
-                initialData || {
-                    name: '',
-                    category: categories[0]?.id || FoodCategory.CARNES,
-                    quantity: 1,
-                    location: { drawer: 1, section: 'A' },
-                    dateAdded: new Date().toISOString(),
-                }
+                initialData || defaultFormData
             );
         }
-    }, [initialData, open, categories]);
+    }, [initialData, open, categories, lastSelectedCategory]);
 
     const handleChange = (field: keyof FoodItem, value: any) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
+
+        if (field === 'category') {
+            setLastSelectedCategory(value);
+        }
     };
 
     const handleLocationChange = (field: keyof FreezerLocation, value: any) => {
