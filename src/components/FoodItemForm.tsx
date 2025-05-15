@@ -4,6 +4,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    DialogContentText,
     Button,
     TextField,
     FormControl,
@@ -43,6 +44,7 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
         }
     });
     const [error, setError] = useState<string | null>(null);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     useEffect(() => {
         if (open) {
@@ -98,91 +100,125 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
         }
     };
 
+    const handleDeleteConfirmation = () => {
+        setConfirmDeleteOpen(true);
+    };
+
+    const handleDeleteCancel = () => {
+        setConfirmDeleteOpen(false);
+    };
+
     const handleDelete = async () => {
         if (initialData && initialData.id) {
             try {
                 await deleteFoodItem(initialData.id);
+                setConfirmDeleteOpen(false);
                 onClose();
             } catch (error) {
                 console.error('Failed to delete item:', error);
                 setError('Erro ao remover o item');
+                setConfirmDeleteOpen(false);
             }
         }
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>
-                {initialData ? 'Editar Item' : 'Adicionar Novo Item'}
-            </DialogTitle>
-            <DialogContent>
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
-                        {error}
-                    </Alert>
-                )}
-                <Grid container spacing={2} sx={{ mt: 1 }}>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Nome"
-                            value={formData.name}
-                            onChange={(e) => handleChange('name', e.target.value)}
-                        />
+        <>
+            <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    {initialData ? 'Editar Item' : 'Adicionar Novo Item'}
+                </DialogTitle>
+                <DialogContent>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+                            {error}
+                        </Alert>
+                    )}
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Nome"
+                                value={formData.name}
+                                onChange={(e) => handleChange('name', e.target.value)}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <FormControl fullWidth>
+                                <InputLabel>Categoria</InputLabel>
+                                <Select
+                                    value={formData.category}
+                                    label="Categoria"
+                                    onChange={(e) => handleChange('category', e.target.value)}
+                                >
+                                    {categories.map((category) => (
+                                        <MenuItem key={category.id} value={category.id}>
+                                            {category.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <TextField
+                                fullWidth
+                                type="number"
+                                label="Quantidade"
+                                value={formData.quantity}
+                                onChange={(e) => handleChange('quantity', parseInt(e.target.value))}
+                                inputProps={{ min: 0 }}
+                                error={!!error && error.includes('quantidade')}
+                                helperText={error && error.includes('quantidade') ? error : ''}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                label="Observações"
+                                multiline
+                                rows={3}
+                                value={formData.notes}
+                                onChange={(e) => handleChange('notes', e.target.value)}
+                            />
+                        </Grid>
                     </Grid>
-                    <Grid item xs={12}>
-                        <FormControl fullWidth>
-                            <InputLabel>Categoria</InputLabel>
-                            <Select
-                                value={formData.category}
-                                label="Categoria"
-                                onChange={(e) => handleChange('category', e.target.value)}
-                            >
-                                {categories.map((category) => (
-                                    <MenuItem key={category.id} value={category.id}>
-                                        {category.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Quantidade"
-                            value={formData.quantity}
-                            onChange={(e) => handleChange('quantity', parseInt(e.target.value))}
-                            inputProps={{ min: 0 }}
-                            error={!!error && error.includes('quantidade')}
-                            helperText={error && error.includes('quantidade') ? error : ''}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Observações"
-                            multiline
-                            rows={3}
-                            value={formData.notes}
-                            onChange={(e) => handleChange('notes', e.target.value)}
-                        />
-                    </Grid>
-                </Grid>
-            </DialogContent>
-            <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 2, pb: 2 }}>
-                {initialData && (
-                    <Button onClick={handleDelete} variant="contained" color="error">
-                        REMOVER
+                </DialogContent>
+                <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 2, pb: 2 }}>
+                    {initialData && (
+                        <Button onClick={handleDeleteConfirmation} variant="contained" color="error">
+                            REMOVER
+                        </Button>
+                    )}
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button onClick={onClose}>Cancelar</Button>
+                        <Button onClick={handleSubmit} variant="contained" color="primary">
+                            {initialData ? 'Salvar' : 'Adicionar'}
+                        </Button>
+                    </Box>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={confirmDeleteOpen}
+                onClose={handleDeleteCancel}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    Confirmar remoção
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Tem certeza que deseja remover este item? Esta ação não pode ser desfeita.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDeleteCancel}>Cancelar</Button>
+                    <Button onClick={handleDelete} color="error" autoFocus>
+                        Confirmar
                     </Button>
-                )}
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button onClick={onClose}>Cancelar</Button>
-                    <Button onClick={handleSubmit} variant="contained" color="primary">
-                        {initialData ? 'Salvar' : 'Adicionar'}
-                    </Button>
-                </Box>
-            </DialogActions>
-        </Dialog>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }; 
