@@ -83,6 +83,12 @@ export const FreezerManager: React.FC = () => {
         .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
         .slice(0, 5);
 
+    // Função auxiliar para obter o nome da categoria
+    const getCategoryName = (categoryId: string) => {
+        const category = categories.find(cat => cat.id === categoryId);
+        return category?.name || categoryId;
+    };
+
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="static">
@@ -196,13 +202,10 @@ export const FreezerManager: React.FC = () => {
                                                         >
                                                             <Typography variant="h6">{item.name}</Typography>
                                                             <Typography color="text.secondary">
-                                                                {item.category}
+                                                                {getCategoryName(item.category)}
                                                             </Typography>
                                                             <Typography>
                                                                 Quantidade: {item.quantity}
-                                                            </Typography>
-                                                            <Typography>
-                                                                Gaveta: {item.location.drawer}
                                                             </Typography>
                                                         </Paper>
                                                     </Grid>
@@ -258,7 +261,7 @@ export const FreezerManager: React.FC = () => {
                                                     {item.name}
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                                                    {item.category}
+                                                    {getCategoryName(item.category)}
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
                                                     Qtd: {item.quantity}

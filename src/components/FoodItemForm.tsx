@@ -33,7 +33,6 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
         name: '',
         category: lastSelectedCategory || categories[0]?.id || '',
         quantity: 1,
-        location: { drawer: 1, section: 'A' },
         dateAdded: new Date().toISOString(),
         notes: ''
     };
@@ -127,23 +126,6 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                             label="Quantidade"
                             value={formData.quantity}
                             onChange={(e) => handleChange('quantity', parseInt(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={6}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Gaveta"
-                            value={formData.location?.drawer}
-                            onChange={(e) => handleLocationChange('drawer', parseInt(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Seção"
-                            value={formData.location?.section}
-                            onChange={(e) => handleLocationChange('section', e.target.value)}
                         />
                     </Grid>
                     <Grid item xs={12}>

@@ -13,7 +13,7 @@ export interface FoodItem {
     quantity: number;
     dateAdded: string;
     expirationDate?: string;
-    location: FreezerLocation;
+    location?: FreezerLocation;
     notes?: string;
 }
 
