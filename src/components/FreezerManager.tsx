@@ -13,7 +13,8 @@ import {
     MenuItem,
     FormControl as MuiFormControl,
     InputLabel,
-    ButtonBase
+    ButtonBase,
+    Menu
 } from '@mui/material';
 import { Add as AddIcon, Search as SearchIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { useFreezerStore } from '../store/freezerStore';
@@ -31,6 +32,7 @@ export const FreezerManager: React.FC = () => {
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<FoodItem | undefined>(undefined);
     const [showResults, setShowResults] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     useEffect(() => {
         fetchItems();
@@ -87,21 +89,51 @@ export const FreezerManager: React.FC = () => {
         return category?.name || categoryId;
     };
 
+    const handleSettingsClick = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleSettingsClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleManageCategories = () => {
+        setIsCategoryManagerOpen(true);
+        handleSettingsClose();
+    };
+
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        Gerenciador do Freezer
+                        Freezinfo
                     </Typography>
                     <IconButton 
                         color="inherit" 
-                        aria-label="manage categories"
-                        onClick={() => setIsCategoryManagerOpen(true)}
+                        aria-label="configurações"
+                        onClick={handleSettingsClick}
                         sx={{ mr: 1 }}
                     >
                         <SettingsIcon />
                     </IconButton>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleSettingsClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                        }}
+                    >
+                        <MenuItem onClick={handleManageCategories}>
+                            Gerenciar Categorias
+                        </MenuItem>
+                    </Menu>
                     <IconButton 
                         color="inherit" 
                         aria-label="add item"
