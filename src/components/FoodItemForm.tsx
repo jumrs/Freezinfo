@@ -11,7 +11,8 @@ import {
     Select,
     MenuItem,
     Grid,
-    Alert
+    Alert,
+    Box
 } from '@mui/material';
 import { FoodItem } from '../types';
 import { useFreezerStore } from '../store/freezerStore';
@@ -28,7 +29,7 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
     onClose,
     initialData
 }) => {
-    const { addFoodItem, updateFoodItem } = useFreezerStore();
+    const { addFoodItem, updateFoodItem, deleteFoodItem } = useFreezerStore();
     const { categories } = useCategoryStore();
     const [formData, setFormData] = useState<FoodItem>(initialData || {
         id: '',
@@ -97,6 +98,18 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
         }
     };
 
+    const handleDelete = async () => {
+        if (initialData && initialData.id) {
+            try {
+                await deleteFoodItem(initialData.id);
+                onClose();
+            } catch (error) {
+                console.error('Failed to delete item:', error);
+                setError('Erro ao remover o item');
+            }
+        }
+    };
+
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle>
@@ -157,11 +170,18 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                     </Grid>
                 </Grid>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Cancelar</Button>
-                <Button onClick={handleSubmit} variant="contained" color="primary">
-                    {initialData ? 'Salvar' : 'Adicionar'}
-                </Button>
+            <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 2, pb: 2 }}>
+                {initialData && (
+                    <Button onClick={handleDelete} variant="contained" color="error">
+                        REMOVER
+                    </Button>
+                )}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button onClick={onClose}>Cancelar</Button>
+                    <Button onClick={handleSubmit} variant="contained" color="primary">
+                        {initialData ? 'Salvar' : 'Adicionar'}
+                    </Button>
+                </Box>
             </DialogActions>
         </Dialog>
     );
