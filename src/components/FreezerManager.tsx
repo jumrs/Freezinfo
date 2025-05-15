@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
     Box, 
     AppBar, 
@@ -14,14 +14,22 @@ import {
     FormControl as MuiFormControl,
     InputLabel,
     ButtonBase,
-    Menu
+    Menu,
+    Tooltip
 } from '@mui/material';
-import { Add as AddIcon, Search as SearchIcon, Settings as SettingsIcon } from '@mui/icons-material';
+import { 
+    Add as AddIcon, 
+    Search as SearchIcon, 
+    Settings as SettingsIcon,
+    DarkMode as DarkModeIcon,
+    LightMode as LightModeIcon
+} from '@mui/icons-material';
 import { useFreezerStore } from '../store/freezerStore';
 import { useCategoryStore } from '../store/categoryStore';
 import { FoodItem } from '../types';
 import { FoodItemForm } from './FoodItemForm';
 import { CategoryManager } from './CategoryManager';
+import { ColorModeContext } from '../App';
 
 export const FreezerManager: React.FC = () => {
     const { filteredItems, setFilters, loading, items, fetchItems, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
@@ -33,6 +41,7 @@ export const FreezerManager: React.FC = () => {
     const [itemToEdit, setItemToEdit] = useState<FoodItem | undefined>(undefined);
     const [showResults, setShowResults] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const colorMode = useContext(ColorModeContext);
 
     useEffect(() => {
         fetchItems();
@@ -109,6 +118,15 @@ export const FreezerManager: React.FC = () => {
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Freezinfo
                     </Typography>
+                    <Tooltip title={colorMode.mode === 'dark' ? 'Modo claro' : 'Modo escuro'}>
+                        <IconButton 
+                            color="inherit" 
+                            onClick={colorMode.toggleColorMode}
+                            sx={{ mr: 1 }}
+                        >
+                            {colorMode.mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+                        </IconButton>
+                    </Tooltip>
                     <IconButton 
                         color="inherit" 
                         aria-label="configurações"
