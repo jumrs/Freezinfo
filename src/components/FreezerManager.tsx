@@ -14,18 +14,23 @@ import {
     FormControl,
     InputLabel,
     Divider,
-    ButtonBase
+    ButtonBase,
+    Button
 } from '@mui/material';
-import { Add as AddIcon, Search as SearchIcon } from '@mui/icons-material';
+import { Add as AddIcon, Search as SearchIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { useFreezerStore } from '../store/freezerStore';
+import { useCategoryStore } from '../store/categoryStore';
 import { FoodCategory, FoodItem } from '../types';
 import { FoodItemForm } from './FoodItemForm';
+import { CategoryManager } from './CategoryManager';
 
 export const FreezerManager: React.FC = () => {
     const { filteredItems, setFilters, loading, error, items, fetchItems } = useFreezerStore();
+    const { categories } = useCategoryStore();
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<FoodCategory | ''>('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<FoodItem | undefined>(undefined);
     const [showResults, setShowResults] = useState(false);
 
@@ -40,7 +45,7 @@ export const FreezerManager: React.FC = () => {
     };
 
     const handleCategoryChange = (event: any) => {
-        const category = event.target.value as FoodCategory | '';
+        const category = event.target.value as string;
         setSelectedCategory(category);
         setShowResults(false);
     };
@@ -79,6 +84,14 @@ export const FreezerManager: React.FC = () => {
                     </Typography>
                     <IconButton 
                         color="inherit" 
+                        aria-label="manage categories"
+                        onClick={() => setIsCategoryManagerOpen(true)}
+                        sx={{ mr: 1 }}
+                    >
+                        <SettingsIcon />
+                    </IconButton>
+                    <IconButton 
+                        color="inherit" 
                         aria-label="add item"
                         onClick={handleOpenAddDialog}
                     >
@@ -91,6 +104,11 @@ export const FreezerManager: React.FC = () => {
                 open={isAddDialogOpen}
                 onClose={handleCloseAddDialog}
                 initialData={itemToEdit}
+            />
+
+            <CategoryManager
+                open={isCategoryManagerOpen}
+                onClose={() => setIsCategoryManagerOpen(false)}
             />
 
             <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -129,9 +147,9 @@ export const FreezerManager: React.FC = () => {
                                         label="Categoria"
                                     >
                                         <MenuItem value="">Todas</MenuItem>
-                                        {Object.values(FoodCategory).map((category) => (
-                                            <MenuItem key={category} value={category}>
-                                                {category}
+                                        {categories.map((category) => (
+                                            <MenuItem key={category.id} value={category.id}>
+                                                {category.name}
                                             </MenuItem>
                                         ))}
                                     </Select>
@@ -236,6 +254,49 @@ export const FreezerManager: React.FC = () => {
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
                                                     Qtd: {item.quantity}
+                                                </Typography>
+                                            </Paper>
+                                        </ButtonBase>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Paper>
+                    </Grid>
+
+                    {/* Categories Section */}
+                    <Grid item xs={12}>
+                        <Paper sx={{ p: 2 }}>
+                            <Typography variant="h6" gutterBottom>
+                                Categorias
+                            </Typography>
+                            <Grid container spacing={2}>
+                                {categories.map((category) => (
+                                    <Grid item xs={12} sm={6} md={2.4} key={category.id}>
+                                        <ButtonBase 
+                                            onClick={() => {
+                                                setSelectedCategory(category.id);
+                                                setFilters({ category: category.id });
+                                                setShowResults(true);
+                                            }}
+                                            sx={{ width: '100%' }}
+                                        >
+                                            <Paper 
+                                                sx={{ 
+                                                    p: 2, 
+                                                    display: 'flex', 
+                                                    flexDirection: 'column',
+                                                    width: '100%',
+                                                    bgcolor: selectedCategory === category.id ? 'primary.main' : 'primary.light',
+                                                    color: 'primary.contrastText',
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': {
+                                                        bgcolor: 'primary.main',
+                                                        transform: 'scale(1.02)',
+                                                    }
+                                                }}
+                                            >
+                                                <Typography variant="h6" align="center">
+                                                    {category.name}
                                                 </Typography>
                                             </Paper>
                                         </ButtonBase>

@@ -9,7 +9,7 @@ export enum FoodCategory {
 export interface FoodItem {
     id: string;
     name: string;
-    category: FoodCategory;
+    category: string;
     quantity: number;
     dateAdded: string;
     expirationDate?: string;
@@ -23,7 +23,7 @@ export interface FreezerLocation {
 }
 
 export interface SearchFilters {
-    category?: FoodCategory;
+    category?: string;
     searchTerm?: string;
     drawer?: number;
 } 

@@ -11,13 +11,13 @@ interface FreezerState {
     error: string | null;
     filters: {
         searchTerm?: string;
-        category?: FoodCategory;
+        category?: string;
     };
     fetchItems: () => Promise<void>;
     addFoodItem: (item: FoodItem) => Promise<void>;
     updateFoodItem: (item: FoodItem) => Promise<void>;
     deleteFoodItem: (id: string) => Promise<void>;
-    setFilters: (filters: { searchTerm?: string; category?: FoodCategory }) => void;
+    setFilters: (filters: { searchTerm?: string; category?: string }) => void;
     filteredItems: () => FoodItem[];
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { FoodCategory, FoodItem, FreezerLocation } from '../types';
 import { useFreezerStore } from '../store/freezerStore';
+import { useCategoryStore } from '../store/categoryStore';
 
 interface FoodItemFormProps {
     open: boolean;
@@ -27,15 +28,30 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
     initialData
 }) => {
     const { addFoodItem, updateFoodItem } = useFreezerStore();
+    const { categories } = useCategoryStore();
     const [formData, setFormData] = useState<Partial<FoodItem>>(
         initialData || {
             name: '',
-            category: FoodCategory.CARNES,
+            category: categories[0]?.id || FoodCategory.CARNES,
             quantity: 1,
             location: { drawer: 1, section: 'A' },
             dateAdded: new Date().toISOString(),
         }
     );
+
+    useEffect(() => {
+        if (open) {
+            setFormData(
+                initialData || {
+                    name: '',
+                    category: categories[0]?.id || FoodCategory.CARNES,
+                    quantity: 1,
+                    location: { drawer: 1, section: 'A' },
+                    dateAdded: new Date().toISOString(),
+                }
+            );
+        }
+    }, [initialData, open, categories]);
 
     const handleChange = (field: keyof FoodItem, value: any) => {
         setFormData(prev => ({
@@ -95,9 +111,9 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                                 label="Categoria"
                                 onChange={(e) => handleChange('category', e.target.value)}
                             >
-                                {Object.values(FoodCategory).map((category) => (
-                                    <MenuItem key={category} value={category}>
-                                        {category}
+                                {categories.map((category) => (
+                                    <MenuItem key={category.id} value={category.id}>
+                                        {category.name}
                                     </MenuItem>
                                 ))}
                             </Select>

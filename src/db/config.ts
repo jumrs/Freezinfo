@@ -2,7 +2,7 @@ import { FoodItem } from '../types';
 
 const DB_NAME = 'freezerDB';
 const STORE_NAME = 'foodItems';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let db: IDBDatabase | null = null;
 
@@ -18,8 +18,15 @@ export async function initializeDatabase(): Promise<void> {
 
         request.onupgradeneeded = (event) => {
             const db = (event.target as IDBOpenDBRequest).result;
+            
+            // Criar ou manter a store de itens
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+
+            // Criar ou manter a store de categorias
+            if (!db.objectStoreNames.contains('categories')) {
+                db.createObjectStore('categories', { keyPath: 'id' });
             }
         };
     });
