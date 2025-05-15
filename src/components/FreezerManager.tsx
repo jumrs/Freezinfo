@@ -222,7 +222,11 @@ export const FreezerManager: React.FC = () => {
                                                     p: 2, 
                                                     display: 'flex', 
                                                     flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
                                                     width: '100%',
+                                                    height: '80px',
+                                                    minHeight: '80px',
                                                     bgcolor: selectedCategory === "todos" && showResults ? 'primary.main' : 'primary.light',
                                                     color: 'primary.contrastText',
                                                     transition: 'all 0.2s',
@@ -232,7 +236,16 @@ export const FreezerManager: React.FC = () => {
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="h6" align="center">
+                                                <Typography 
+                                                    variant="h6" 
+                                                    align="center"
+                                                    sx={{
+                                                        fontSize: '0.9rem',
+                                                        whiteSpace: 'normal',
+                                                        wordBreak: 'break-word',
+                                                        lineHeight: '1.2',
+                                                    }}
+                                                >
                                                     Todos
                                                 </Typography>
                                             </Paper>
@@ -262,7 +275,11 @@ export const FreezerManager: React.FC = () => {
                                                         p: 2, 
                                                         display: 'flex', 
                                                         flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
                                                         width: '100%',
+                                                        height: '80px',
+                                                        minHeight: '80px',
                                                         bgcolor: selectedCategory === category.id && showResults ? 'primary.main' : 'primary.light',
                                                         color: 'primary.contrastText',
                                                         transition: 'all 0.2s',
@@ -272,8 +289,17 @@ export const FreezerManager: React.FC = () => {
                                                         }
                                                     }}
                                                 >
-                                                    <Typography variant="h6" align="center">
-                                                        {category.name}
+                                                    <Typography 
+                                                        variant="h6" 
+                                                        align="center"
+                                                        sx={{
+                                                            fontSize: '0.9rem',
+                                                            whiteSpace: 'normal',
+                                                            wordBreak: 'break-word',
+                                                            lineHeight: '1.2',
+                                                        }}
+                                                    >
+                                                        {getCategoryName(category.id)}
                                                     </Typography>
                                                 </Paper>
                                             </ButtonBase>

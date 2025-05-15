@@ -26,39 +26,69 @@ export const App: React.FC = () => {
             createTheme({
                 palette: {
                     mode,
-                    primary: {
-                        main: mode === 'light' ? '#757575' : '#666666',
-                        light: mode === 'light' ? '#a4a4a4' : '#808080',
-                        dark: mode === 'light' ? '#494949' : '#404040',
-                        contrastText: mode === 'light' ? '#ffffff' : '#e0e0e0',
-                    },
-                    secondary: {
-                        main: mode === 'light' ? '#9e9e9e' : '#595959',
-                        light: mode === 'light' ? '#cfcfcf' : '#737373',
-                        dark: mode === 'light' ? '#707070' : '#333333',
-                        contrastText: mode === 'light' ? '#000000' : '#e0e0e0',
-                    },
-                    background: {
-                        default: mode === 'light' ? '#ffffff' : '#121212',
-                        paper: mode === 'light' ? '#f5f5f5' : '#1a1a1a',
-                    },
-                    text: {
-                        primary: mode === 'light' ? '#424242' : '#b3b3b3',
-                        secondary: mode === 'light' ? '#757575' : '#808080',
-                    },
-                    action: {
-                        hover: mode === 'light' ? '#eeeeee' : '#262626',
-                    }
+                    ...(mode === 'light'
+                        ? {
+                            // Light Mode Palette
+                            primary: {
+                                main: '#333333', // Darker Gray
+                                light: '#5c5c5c',
+                                dark: '#1a1a1a',
+                                contrastText: '#ffffff',
+                            },
+                            secondary: {
+                                main: '#757575', // Medium Gray
+                                light: '#a4a4a4',
+                                dark: '#494949',
+                                contrastText: '#ffffff',
+                            },
+                            background: {
+                                default: '#f9f9f9', // Very light gray
+                                paper: '#ffffff',   // White
+                            },
+                            text: {
+                                primary: '#212121', // Very dark gray
+                                secondary: '#757575', // Medium gray
+                            },
+                            action: {
+                                hover: 'rgba(0, 0, 0, 0.04)', // Subtle dark hover
+                            },
+                        }
+                        : {
+                            // Dark Mode Palette
+                            primary: {
+                                main: '#bbbbbb', // Light Gray
+                                light: '#e7e7e7',
+                                dark: '#8c8c8c',
+                                contrastText: '#121212',
+                            },
+                            secondary: {
+                                main: '#757575', // Medium Gray (can be adjusted if needed for more contrast)
+                                light: '#a4a4a4',
+                                dark: '#494949',
+                                contrastText: '#e0e0e0',
+                            },
+                            background: {
+                                default: '#121212', // Standard dark
+                                paper: '#1e1e1e',   // Slightly lighter dark for paper
+                            },
+                            text: {
+                                primary: '#e0e0e0', // Light gray
+                                secondary: '#b3b3b3', // Slightly darker light gray
+                            },
+                            action: {
+                                hover: 'rgba(255, 255, 255, 0.08)', // Subtle light hover
+                            },
+                        }),
                 },
                 components: {
                     MuiPaper: {
                         styleOverrides: {
                             root: {
-                                backgroundColor: mode === 'light' ? '#ffffff' : '#1a1a1a',
+                                backgroundColor: mode === 'light' ? '#ffffff' : '#1e1e1e', // Consistent with new paper bg
                                 '&.MuiPaper-elevation1': {
-                                    boxShadow: mode === 'light' 
-                                        ? '0px 2px 1px -1px rgba(0,0,0,0.08),0px 1px 1px 0px rgba(0,0,0,0.06),0px 1px 3px 0px rgba(0,0,0,0.04)'
-                                        : '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)'
+                                    boxShadow: mode === 'light'
+                                        ? '0px 2px 6px rgba(0, 0, 0, 0.04)' // Softer shadow for light mode
+                                        : '0px 2px 8px rgba(0, 0, 0, 0.25)', // Adjusted shadow for dark mode
                                 }
                             }
                         }
