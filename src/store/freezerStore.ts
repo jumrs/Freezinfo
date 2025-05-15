@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FoodCategory, FoodItem } from '../types';
+import { FoodItem } from '../types';
 import { getAllItems, addItem, updateItem, deleteItem, initializeDatabase } from '../db/config';
 
 // Initialize database when the store is created

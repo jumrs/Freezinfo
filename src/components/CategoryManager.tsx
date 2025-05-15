@@ -61,7 +61,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
         }
     };
 
-    const handleUpdateCategory = async (category: Category) => {
+    const handleUpdateCategory = async (_category: Category) => {
         if (!editingCategory?.name.trim()) {
             setError('O nome da categoria não pode estar vazio');
             return;

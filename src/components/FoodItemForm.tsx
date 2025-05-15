@@ -10,9 +10,10 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Grid
+    Grid,
+    Alert
 } from '@mui/material';
-import { FoodCategory, FoodItem, FreezerLocation } from '../types';
+import { FoodItem } from '../types';
 import { useFreezerStore } from '../store/freezerStore';
 import { useCategoryStore } from '../store/categoryStore';
 
@@ -27,50 +28,57 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
     onClose,
     initialData
 }) => {
-    const { addFoodItem, updateFoodItem, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
+    const { addFoodItem, updateFoodItem } = useFreezerStore();
     const { categories } = useCategoryStore();
-    const defaultFormData = {
+    const [formData, setFormData] = useState<FoodItem>(initialData || {
+        id: '',
         name: '',
-        category: lastSelectedCategory || categories[0]?.id || '',
         quantity: 1,
+        category: '',
         dateAdded: new Date().toISOString(),
-        notes: ''
-    };
-
-    const [formData, setFormData] = useState<Partial<FoodItem>>(
-        initialData || defaultFormData
-    );
+        location: {
+            drawer: 1,
+            section: 'front'
+        }
+    });
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (open) {
             setFormData(
-                initialData || defaultFormData
+                initialData || {
+                    id: '',
+                    name: '',
+                    quantity: 1,
+                    category: '',
+                    dateAdded: new Date().toISOString(),
+                    location: {
+                        drawer: 1,
+                        section: 'front'
+                    }
+                }
             );
         }
-    }, [initialData, open, categories, lastSelectedCategory]);
+    }, [open, initialData]);
 
     const handleChange = (field: keyof FoodItem, value: any) => {
+        if (field === 'quantity' && value < 0) {
+            setError('A quantidade não pode ser menor que zero');
+            return;
+        }
+        setError(null);
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
-
-        if (field === 'category') {
-            setLastSelectedCategory(value);
-        }
-    };
-
-    const handleLocationChange = (field: keyof FreezerLocation, value: any) => {
-        setFormData(prev => ({
-            ...prev,
-            location: {
-                ...prev.location!,
-                [field]: value
-            }
-        }));
     };
 
     const handleSubmit = async () => {
+        if (formData.quantity < 0) {
+            setError('A quantidade não pode ser menor que zero');
+            return;
+        }
+
         try {
             if (initialData) {
                 await updateFoodItem(formData as FoodItem);
@@ -85,6 +93,7 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
             onClose();
         } catch (error) {
             console.error('Failed to save item:', error);
+            setError('Erro ao salvar o item');
         }
     };
 
@@ -94,6 +103,11 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                 {initialData ? 'Editar Item' : 'Adicionar Novo Item'}
             </DialogTitle>
             <DialogContent>
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+                        {error}
+                    </Alert>
+                )}
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid item xs={12}>
                         <TextField
@@ -126,6 +140,9 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                             label="Quantidade"
                             value={formData.quantity}
                             onChange={(e) => handleChange('quantity', parseInt(e.target.value))}
+                            inputProps={{ min: 0 }}
+                            error={!!error && error.includes('quantidade')}
+                            helperText={error && error.includes('quantidade') ? error : ''}
                         />
                     </Grid>
                     <Grid item xs={12}>

@@ -11,21 +11,19 @@ import {
     IconButton,
     Select,
     MenuItem,
-    FormControl,
+    FormControl as MuiFormControl,
     InputLabel,
-    Divider,
-    ButtonBase,
-    Button
+    ButtonBase
 } from '@mui/material';
 import { Add as AddIcon, Search as SearchIcon, Settings as SettingsIcon } from '@mui/icons-material';
 import { useFreezerStore } from '../store/freezerStore';
 import { useCategoryStore } from '../store/categoryStore';
-import { FoodCategory, FoodItem } from '../types';
+import { FoodItem } from '../types';
 import { FoodItemForm } from './FoodItemForm';
 import { CategoryManager } from './CategoryManager';
 
 export const FreezerManager: React.FC = () => {
-    const { filteredItems, setFilters, loading, error, items, fetchItems, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
+    const { filteredItems, setFilters, loading, items, fetchItems, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
     const { categories } = useCategoryStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>(lastSelectedCategory);
@@ -153,7 +151,7 @@ export const FreezerManager: React.FC = () => {
                                         )
                                     }}
                                 />
-                                <FormControl sx={{ minWidth: 200 }}>
+                                <MuiFormControl sx={{ minWidth: 200 }}>
                                     <InputLabel>Categoria</InputLabel>
                                     <Select
                                         value={selectedCategory}
@@ -167,7 +165,7 @@ export const FreezerManager: React.FC = () => {
                                             </MenuItem>
                                         ))}
                                     </Select>
-                                </FormControl>
+                                </MuiFormControl>
                             </Box>
                         </Paper>
                     </Grid>
