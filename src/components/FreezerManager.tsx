@@ -32,7 +32,7 @@ import { CategoryManager } from './CategoryManager';
 import { ColorModeContext } from '../App';
 
 export const FreezerManager: React.FC = () => {
-    const { filteredItems, setFilters, loading, items, fetchItems, lastSelectedCategory, setLastSelectedCategory } = useFreezerStore();
+    const { filteredItems, setFilters, loading, items, fetchItems, lastSelectedCategory, setLastSelectedCategory, getSortedItems } = useFreezerStore();
     const { categories } = useCategoryStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>(lastSelectedCategory);
@@ -65,11 +65,8 @@ export const FreezerManager: React.FC = () => {
     };
 
     const performSearch = () => {
-        setFilters({ searchTerm, category: selectedCategory || undefined });
+        setFilters({ searchTerm });
         setShowResults(true);
-        if (selectedCategory) {
-            setLastSelectedCategory(selectedCategory);
-        }
     };
 
     const handleOpenAddDialog = () => {
@@ -178,7 +175,7 @@ export const FreezerManager: React.FC = () => {
                     {/* Search and Filter Section */}
                     <Grid item xs={12}>
                         <Paper sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                                 <TextField
                                     fullWidth
                                     variant="outlined"
@@ -201,21 +198,88 @@ export const FreezerManager: React.FC = () => {
                                         )
                                     }}
                                 />
-                                <MuiFormControl sx={{ minWidth: 200 }}>
-                                    <InputLabel>Categoria</InputLabel>
-                                    <Select
-                                        value={selectedCategory}
-                                        onChange={handleCategoryChange}
-                                        label="Categoria"
-                                    >
-                                        <MenuItem value="">Todas</MenuItem>
-                                        {categories.map((category) => (
-                                            <MenuItem key={category.id} value={category.id}>
-                                                {category.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </MuiFormControl>
+                                <Grid container spacing={2}>
+                                    {/* Botão Todos */}
+                                    <Grid item xs={12} sm={6} md={2.4}>
+                                        <ButtonBase 
+                                            onClick={() => {
+                                                if (selectedCategory === "todos" && showResults) {
+                                                    // Se já está selecionado, desseleciona
+                                                    setSelectedCategory("");
+                                                    setFilters({});
+                                                    setShowResults(false);
+                                                } else {
+                                                    // Se não está selecionado, seleciona
+                                                    setSelectedCategory("todos");
+                                                    setFilters({});  // Sem filtro de categoria para mostrar todos
+                                                    setShowResults(true);
+                                                }
+                                            }}
+                                            sx={{ width: '100%' }}
+                                        >
+                                            <Paper 
+                                                sx={{ 
+                                                    p: 2, 
+                                                    display: 'flex', 
+                                                    flexDirection: 'column',
+                                                    width: '100%',
+                                                    bgcolor: selectedCategory === "todos" && showResults ? 'primary.main' : 'primary.light',
+                                                    color: 'primary.contrastText',
+                                                    transition: 'all 0.2s',
+                                                    '&:hover': {
+                                                        bgcolor: 'primary.main',
+                                                        transform: 'scale(1.02)',
+                                                    }
+                                                }}
+                                            >
+                                                <Typography variant="h6" align="center">
+                                                    Todos
+                                                </Typography>
+                                            </Paper>
+                                        </ButtonBase>
+                                    </Grid>
+                                    {/* Outras categorias */}
+                                    {categories.map((category) => (
+                                        <Grid item xs={12} sm={6} md={2.4} key={category.id}>
+                                            <ButtonBase 
+                                                onClick={() => {
+                                                    if (selectedCategory === category.id && showResults) {
+                                                        // Se já está selecionado, desseleciona
+                                                        setSelectedCategory("");
+                                                        setFilters({});
+                                                        setShowResults(false);
+                                                    } else {
+                                                        // Se não está selecionado, seleciona
+                                                        setSelectedCategory(category.id);
+                                                        setFilters({ category: category.id });
+                                                        setShowResults(true);
+                                                    }
+                                                }}
+                                                sx={{ width: '100%' }}
+                                            >
+                                                <Paper 
+                                                    sx={{ 
+                                                        p: 2, 
+                                                        display: 'flex', 
+                                                        flexDirection: 'column',
+                                                        width: '100%',
+                                                        bgcolor: selectedCategory === category.id && showResults ? 'primary.main' : 'primary.light',
+                                                        color: 'primary.contrastText',
+                                                        transition: 'all 0.2s',
+                                                        '&:hover': {
+                                                            bgcolor: 'primary.main',
+                                                            transform: 'scale(1.02)',
+                                                        }
+                                                    }}
+                                                >
+                                                    <Typography variant="h6" align="center">
+                                                        {category.name}
+                                                    </Typography>
+                                                </Paper>
+                                            </ButtonBase>
+                                        </Grid>
+                                    ))}
+                                </Grid>
                             </Box>
                         </Paper>
                     </Grid>
@@ -225,15 +289,15 @@ export const FreezerManager: React.FC = () => {
                         <Grid item xs={12}>
                             <Paper sx={{ p: 2 }}>
                                 <Typography variant="h6" gutterBottom>
-                                    Resultados da Busca
+                                    {selectedCategory === "todos" ? "Todos os Itens" : "Resultados da Busca"}
                                 </Typography>
                                 {loading ? (
                                     <Typography>Buscando...</Typography>
                                 ) : (
                                     <>
-                                        {filteredItems().length > 0 ? (
+                                        {(selectedCategory === "todos" ? getSortedItems() : filteredItems()).length > 0 ? (
                                             <Grid container spacing={2}>
-                                                {filteredItems().map((item) => (
+                                                {(selectedCategory === "todos" ? getSortedItems() : filteredItems()).map((item) => (
                                                     <Grid item xs={12} sm={6} md={4} key={item.id}>
                                                         <Paper 
                                                             sx={{ 
@@ -313,49 +377,6 @@ export const FreezerManager: React.FC = () => {
                                                 </Typography>
                                                 <Typography variant="body2" sx={{ opacity: 0.8 }}>
                                                     Qtd: {item.quantity}
-                                                </Typography>
-                                            </Paper>
-                                        </ButtonBase>
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Paper>
-                    </Grid>
-
-                    {/* Categories Section */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Categorias
-                            </Typography>
-                            <Grid container spacing={2}>
-                                {categories.map((category) => (
-                                    <Grid item xs={12} sm={6} md={2.4} key={category.id}>
-                                        <ButtonBase 
-                                            onClick={() => {
-                                                setSelectedCategory(category.id);
-                                                setFilters({ category: category.id });
-                                                setShowResults(true);
-                                            }}
-                                            sx={{ width: '100%' }}
-                                        >
-                                            <Paper 
-                                                sx={{ 
-                                                    p: 2, 
-                                                    display: 'flex', 
-                                                    flexDirection: 'column',
-                                                    width: '100%',
-                                                    bgcolor: selectedCategory === category.id ? 'primary.main' : 'primary.light',
-                                                    color: 'primary.contrastText',
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': {
-                                                        bgcolor: 'primary.main',
-                                                        transform: 'scale(1.02)',
-                                                    }
-                                                }}
-                                            >
-                                                <Typography variant="h6" align="center">
-                                                    {category.name}
                                                 </Typography>
                                             </Paper>
                                         </ButtonBase>

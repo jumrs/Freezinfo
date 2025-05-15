@@ -21,6 +21,7 @@ interface FreezerState {
     setFilters: (filters: { searchTerm?: string; category?: string }) => void;
     setLastSelectedCategory: (category: string) => void;
     filteredItems: () => FoodItem[];
+    getSortedItems: () => FoodItem[];
 }
 
 export const useFreezerStore = create<FreezerState>((set, get) => {
@@ -90,13 +91,60 @@ export const useFreezerStore = create<FreezerState>((set, get) => {
 
         filteredItems: () => {
             const { items, filters } = get();
-            return items.filter(item => {
+            const searchResults = items.filter(item => {
                 const matchesSearch = !filters.searchTerm || 
                     item.name.toLowerCase().includes(filters.searchTerm.toLowerCase());
-                const matchesCategory = !filters.category || 
+                const matchesCategory = !filters.category || filters.category === "" || 
                     item.category === filters.category;
                 return matchesSearch && matchesCategory;
             });
+
+            // Se a categoria é "Todos" (vazia) e temos um termo de busca, retornamos ordenado
+            if ((!filters.category || filters.category === "") && filters.searchTerm) {
+                // Group items by category
+                const groupedItems = searchResults.reduce((acc, item) => {
+                    if (!acc[item.category]) {
+                        acc[item.category] = [];
+                    }
+                    acc[item.category].push(item);
+                    return acc;
+                }, {} as Record<string, FoodItem[]>);
+
+                // Sort items within each category alphabetically
+                Object.keys(groupedItems).forEach(category => {
+                    groupedItems[category].sort((a, b) => a.name.localeCompare(b.name));
+                });
+
+                // Sort categories alphabetically and flatten the array
+                return Object.entries(groupedItems)
+                    .sort(([catA], [catB]) => catA.localeCompare(catB))
+                    .reduce((acc, [_, items]) => [...acc, ...items], [] as FoodItem[]);
+            }
+
+            return searchResults;
+        },
+
+        // New function to get items sorted by category and alphabetically
+        getSortedItems: () => {
+            const { items } = get();
+            // Group items by category
+            const groupedItems = items.reduce((acc, item) => {
+                if (!acc[item.category]) {
+                    acc[item.category] = [];
+                }
+                acc[item.category].push(item);
+                return acc;
+            }, {} as Record<string, FoodItem[]>);
+
+            // Sort items within each category alphabetically
+            Object.keys(groupedItems).forEach(category => {
+                groupedItems[category].sort((a, b) => a.name.localeCompare(b.name));
+            });
+
+            // Sort categories alphabetically and flatten the array
+            return Object.entries(groupedItems)
+                .sort(([catA], [catB]) => catA.localeCompare(catB))
+                .reduce((acc, [_, items]) => [...acc, ...items], [] as FoodItem[]);
         },
     };
 }); 
