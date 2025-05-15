@@ -119,18 +119,18 @@ export const FreezerManager: React.FC = () => {
                         <IconButton 
                             color="inherit" 
                             onClick={colorMode.toggleColorMode}
-                            sx={{ mr: 1 }}
+                            sx={{ mr: 1, p: 1.5 }}
                         >
-                            {colorMode.mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+                            {colorMode.mode === 'dark' ? <LightModeIcon fontSize="large" /> : <DarkModeIcon fontSize="large" />}
                         </IconButton>
                     </Tooltip>
                     <IconButton 
                         color="inherit" 
                         aria-label="configurações"
                         onClick={handleSettingsClick}
-                        sx={{ mr: 1 }}
+                        sx={{ mr: 1, p: 1.5 }}
                     >
-                        <SettingsIcon />
+                        <SettingsIcon fontSize="large" />
                     </IconButton>
                     <Menu
                         anchorEl={anchorEl}
@@ -153,8 +153,9 @@ export const FreezerManager: React.FC = () => {
                         color="inherit" 
                         aria-label="add item"
                         onClick={handleOpenAddDialog}
+                        sx={{ p: 1.5 }}
                     >
-                        <AddIcon />
+                        <AddIcon fontSize="large" />
                     </IconButton>
                 </Toolbar>
             </AppBar>
@@ -188,15 +189,18 @@ export const FreezerManager: React.FC = () => {
                                         }
                                     }}
                                     InputProps={{
+                                        style: { fontSize: '1.1rem' },
                                         endAdornment: (
                                             <IconButton 
                                                 onClick={performSearch}
                                                 edge="end"
+                                                sx={{ p: 1.5 }}
                                             >
-                                                <SearchIcon sx={{ color: 'text.secondary' }} />
+                                                <SearchIcon fontSize="medium" />
                                             </IconButton>
                                         )
                                     }}
+                                    sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' } }}
                                 />
                                 <Grid container spacing={2}>
                                     {/* Botão Todos */}
@@ -225,8 +229,7 @@ export const FreezerManager: React.FC = () => {
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
                                                     width: '100%',
-                                                    height: '80px',
-                                                    minHeight: '80px',
+                                                    minHeight: '90px',
                                                     bgcolor: selectedCategory === "todos" && showResults ? 'primary.main' : 'primary.light',
                                                     color: 'primary.contrastText',
                                                     transition: 'all 0.2s',
@@ -240,10 +243,10 @@ export const FreezerManager: React.FC = () => {
                                                     variant="h6" 
                                                     align="center"
                                                     sx={{
-                                                        fontSize: '0.9rem',
+                                                        fontSize: '1rem',
                                                         whiteSpace: 'normal',
                                                         wordBreak: 'break-word',
-                                                        lineHeight: '1.2',
+                                                        lineHeight: '1.3',
                                                     }}
                                                 >
                                                     Todos
@@ -278,8 +281,7 @@ export const FreezerManager: React.FC = () => {
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
                                                         width: '100%',
-                                                        height: '80px',
-                                                        minHeight: '80px',
+                                                        minHeight: '90px',
                                                         bgcolor: selectedCategory === category.id && showResults ? 'primary.main' : 'primary.light',
                                                         color: 'primary.contrastText',
                                                         transition: 'all 0.2s',
@@ -293,10 +295,10 @@ export const FreezerManager: React.FC = () => {
                                                         variant="h6" 
                                                         align="center"
                                                         sx={{
-                                                            fontSize: '0.9rem',
+                                                            fontSize: '1rem',
                                                             whiteSpace: 'normal',
                                                             wordBreak: 'break-word',
-                                                            lineHeight: '1.2',
+                                                            lineHeight: '1.3',
                                                         }}
                                                     >
                                                         {getCategoryName(category.id)}
@@ -327,10 +329,11 @@ export const FreezerManager: React.FC = () => {
                                                     <Grid item xs={12} sm={6} md={4} key={item.id}>
                                                         <Paper 
                                                             sx={{ 
-                                                                p: 2, 
+                                                                p: 2.5,
                                                                 display: 'flex', 
                                                                 flexDirection: 'column',
                                                                 height: '100%',
+                                                                minHeight: '120px',
                                                                 cursor: 'pointer',
                                                                 '&:hover': {
                                                                     bgcolor: 'action.hover'
@@ -338,11 +341,11 @@ export const FreezerManager: React.FC = () => {
                                                             }}
                                                             onClick={() => handleEditItem(item)}
                                                         >
-                                                            <Typography variant="h6">{item.name}</Typography>
-                                                            <Typography color="text.secondary">
+                                                            <Typography variant="h6" sx={{ fontSize: '1.1rem', mb: 0.5 }}>{item.name}</Typography>
+                                                            <Typography color="text.secondary" sx={{ fontSize: '0.9rem', mb: 0.5 }}>
                                                                 {getCategoryName(item.category)}
                                                             </Typography>
-                                                            <Typography>
+                                                            <Typography sx={{ fontSize: '0.9rem' }}>
                                                                 Quantidade: {item.quantity}
                                                             </Typography>
                                                         </Paper>
@@ -381,11 +384,12 @@ export const FreezerManager: React.FC = () => {
                                         >
                                             <Paper 
                                                 sx={{ 
-                                                    p: 2, 
+                                                    p: 2.5,
                                                     display: 'flex', 
                                                     flexDirection: 'column',
                                                     height: '100%',
                                                     width: '100%',
+                                                    minHeight: '100px',
                                                     bgcolor: 'primary.light',
                                                     color: 'primary.contrastText',
                                                     transition: 'all 0.2s',
@@ -395,13 +399,13 @@ export const FreezerManager: React.FC = () => {
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="subtitle1" noWrap>
+                                                <Typography variant="subtitle1" noWrap sx={{ fontSize: '1rem', mb: 0.5 }}>
                                                     {item.name}
                                                 </Typography>
-                                                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem', mb: 0.5 }}>
                                                     {getCategoryName(item.category)}
                                                 </Typography>
-                                                <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
                                                     Qtd: {item.quantity}
                                                 </Typography>
                                             </Paper>

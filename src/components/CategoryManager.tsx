@@ -111,7 +111,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                         }}
                         error={!!error && !editingCategory}
                         helperText={!editingCategory && error}
-                        sx={{ mb: 1 }}
+                        sx={{ mb: 1, '& .MuiOutlinedInput-root': { minHeight: '56px' }, '& .MuiInputBase-input': { fontSize: '1.1rem' } }}
                         onKeyPress={(e) => {
                             if (e.key === 'Enter' && newCategoryName.trim()) {
                                 handleAddCategory();
@@ -122,6 +122,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                         variant="contained"
                         onClick={handleAddCategory}
                         disabled={!newCategoryName.trim()}
+                        sx={{ padding: '10px 20px', fontSize: '0.9rem' }}
                     >
                         Adicionar Categoria
                     </Button>
@@ -129,7 +130,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
 
                 <List>
                     {categories.map((category) => (
-                        <ListItem key={category.id}>
+                        <ListItem key={category.id} sx={{ py: 1.5, '&:hover': { bgcolor: 'action.hover' } }}>
                             {editingCategory?.id === category.id ? (
                                 <TextField
                                     fullWidth
@@ -143,6 +144,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                     }}
                                     error={!!error}
                                     helperText={error}
+                                    sx={{ '& .MuiOutlinedInput-root': { minHeight: '50px' }, '& .MuiInputBase-input': { fontSize: '1.1rem' } }}
                                     onKeyPress={(e) => {
                                         if (e.key === 'Enter' && editingCategory.name.trim()) {
                                             handleUpdateCategory(category);
@@ -153,6 +155,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                 <ListItemText 
                                     primary={category.name}
                                     secondary={category.isDefault ? 'Categoria padrão' : undefined}
+                                    primaryTypographyProps={{ fontSize: '1.1rem' }}
                                 />
                             )}
                             <ListItemSecondaryAction>
@@ -162,6 +165,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                             onClick={() => handleUpdateCategory(category)}
                                             color="primary"
                                             disabled={!editingCategory.name.trim()}
+                                            sx={{ mr:1, padding: '8px 12px', fontSize: '0.85rem' }}
                                         >
                                             Salvar
                                         </Button>
@@ -171,6 +175,7 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                                 setError(null);
                                             }}
                                             color="secondary"
+                                            sx={{ padding: '8px 12px', fontSize: '0.85rem' }}
                                         >
                                             Cancelar
                                         </Button>
@@ -181,15 +186,17 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                                             edge="end"
                                             onClick={() => setEditingCategory(category)}
                                             disabled={category.isDefault}
+                                            sx={{ p: 1.2, mr: 0.5 }}
                                         >
-                                            <EditIcon />
+                                            <EditIcon fontSize="medium" />
                                         </IconButton>
                                         <IconButton
                                             edge="end"
                                             onClick={() => handleDeleteCategory(category)}
                                             disabled={category.isDefault}
+                                            sx={{ p: 1.2 }}
                                         >
-                                            <DeleteIcon />
+                                            <DeleteIcon fontSize="medium"/>
                                         </IconButton>
                                     </>
                                 )}
@@ -198,8 +205,8 @@ export const CategoryManager: React.FC<CategoryManagerProps> = ({
                     ))}
                 </List>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} color="primary">
+            <DialogActions sx={{ px:3, py: 2}}>
+                <Button onClick={onClose} color="primary" sx={{ padding: '10px 20px', fontSize: '0.9rem' }}>
                     Fechar
                 </Button>
             </DialogActions>

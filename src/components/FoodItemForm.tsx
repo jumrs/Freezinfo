@@ -141,18 +141,20 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                                 label="Nome"
                                 value={formData.name}
                                 onChange={(e) => handleChange('name', e.target.value)}
+                                sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' }, '& .MuiInputBase-input': { fontSize: '1.1rem' } }}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl fullWidth>
+                            <FormControl fullWidth sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' } }}>
                                 <InputLabel>Categoria</InputLabel>
                                 <Select
                                     value={formData.category}
                                     label="Categoria"
                                     onChange={(e) => handleChange('category', e.target.value)}
+                                    sx={{ '& .MuiSelect-select': { fontSize: '1.1rem' } }}
                                 >
                                     {categories.map((category) => (
-                                        <MenuItem key={category.id} value={category.id}>
+                                        <MenuItem key={category.id} value={category.id} sx={{ minHeight: '48px', fontSize: '1.1rem' }}>
                                             {category.name}
                                         </MenuItem>
                                     ))}
@@ -169,6 +171,7 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                                 inputProps={{ min: 0 }}
                                 error={!!error && error.includes('quantidade')}
                                 helperText={error && error.includes('quantidade') ? error : ''}
+                                sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' }, '& .MuiInputBase-input': { fontSize: '1.1rem' } }}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -179,19 +182,20 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                                 rows={3}
                                 value={formData.notes}
                                 onChange={(e) => handleChange('notes', e.target.value)}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '4px' }, '& .MuiInputBase-input': { fontSize: '1.1rem', lineHeight: 1.4 } }}
                             />
                         </Grid>
                     </Grid>
                 </DialogContent>
-                <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 2, pb: 2 }}>
+                <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 3, py: 2, gap: 1 }}>
                     {initialData && (
-                        <Button onClick={handleDeleteConfirmation} variant="contained" color="error">
+                        <Button onClick={handleDeleteConfirmation} variant="contained" color="error" sx={{ padding: '10px 20px', fontSize: '0.9rem' }}>
                             REMOVER
                         </Button>
                     )}
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button onClick={onClose}>Cancelar</Button>
-                        <Button onClick={handleSubmit} variant="contained" color="primary">
+                        <Button onClick={onClose} sx={{ padding: '10px 20px', fontSize: '0.9rem' }}>Cancelar</Button>
+                        <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ padding: '10px 20px', fontSize: '0.9rem' }}>
                             {initialData ? 'Salvar' : 'Adicionar'}
                         </Button>
                     </Box>
@@ -212,9 +216,9 @@ export const FoodItemForm: React.FC<FoodItemFormProps> = ({
                         Tem certeza que deseja remover este item? Esta ação não pode ser desfeita.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDeleteCancel}>Cancelar</Button>
-                    <Button onClick={handleDelete} color="error" autoFocus>
+                <DialogActions sx={{ px:3, py: 2, gap: 1}}>
+                    <Button onClick={handleDeleteCancel} sx={{ padding: '10px 20px', fontSize: '0.9rem' }}>Cancelar</Button>
+                    <Button onClick={handleDelete} color="error" autoFocus sx={{ padding: '10px 20px', fontSize: '0.9rem' }}>
                         Confirmar
                     </Button>
                 </DialogActions>
