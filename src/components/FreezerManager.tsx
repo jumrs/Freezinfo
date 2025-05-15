@@ -348,6 +348,11 @@ export const FreezerManager: React.FC = () => {
                                                             <Typography sx={{ fontSize: '0.9rem' }}>
                                                                 Quantidade: {item.quantity}
                                                             </Typography>
+                                                            {item.notes && (
+                                                                <Typography color="text.secondary" sx={{ fontSize: '0.85rem', mt: 1, fontStyle: 'italic' }}>
+                                                                    {item.notes}
+                                                                </Typography>
+                                                            )}
                                                         </Paper>
                                                     </Grid>
                                                 ))}
@@ -408,6 +413,11 @@ export const FreezerManager: React.FC = () => {
                                                 <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
                                                     Qtd: {item.quantity}
                                                 </Typography>
+                                                {item.notes && (
+                                                    <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem', mt: 0.5, fontStyle: 'italic' }}>
+                                                        {item.notes.length > 20 ? `${item.notes.substring(0, 20)}...` : item.notes}
+                                                    </Typography>
+                                                )}
                                             </Paper>
                                         </ButtonBase>
                                     </Grid>
