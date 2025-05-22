@@ -30,6 +30,7 @@ interface RecipeFormProps {
     open: boolean;
     onClose: () => void;
     initialData?: Recipe;
+    onExited?: () => void;
 }
 
 // Opções de unidades comuns para ingredientes
@@ -49,7 +50,8 @@ const unitOptions = [
 export const RecipeForm: React.FC<RecipeFormProps> = ({
     open,
     onClose,
-    initialData
+    initialData,
+    onExited
 }) => {
     const { addRecipe, updateRecipe, deleteRecipe } = useRecipeStore();
     const [recipe, setRecipe] = useState<Recipe>({
@@ -191,7 +193,15 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog 
+            open={open} 
+            onClose={onClose} 
+            maxWidth="md" 
+            fullWidth
+            TransitionProps={{
+                onExited: onExited
+            }}
+        >
             <DialogTitle>{initialData ? 'Editar Receita' : 'Nova Receita'}</DialogTitle>
             <DialogContent>
                 {error && (
@@ -226,7 +236,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
                                             label="Qtd"
                                             value={ingredient.quantity || ''}
                                             onChange={handleUpdateIngredient(index, 'quantity')}
-                                            inputProps={{ min: 0, step: 0.1 }}
+                                            inputProps={{ min: 0, step: 1 }}
                                         />
                                     </Grid>
                                     <Grid item xs={3}>

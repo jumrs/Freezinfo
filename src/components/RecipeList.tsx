@@ -26,11 +26,16 @@ interface RecipeListProps {
 }
 
 export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
-    const { recipes, loading, setFilters, filteredRecipes } = useRecipeStore();
+    const { recipes, loading, setFilters, filteredRecipes, fetchRecipes, deleteRecipe } = useRecipeStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
     const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
+
+    // Atualizar a lista de receitas quando o componente for montado
+    useEffect(() => {
+        fetchRecipes();
+    }, [fetchRecipes]);
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const term = event.target.value;
@@ -50,7 +55,16 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
 
     const handleCloseRecipeForm = () => {
         setIsRecipeFormOpen(false);
-        setSelectedRecipe(null);
+        // Não limpar a receita selecionada aqui para evitar problemas na transição
+        // Atualizar a lista de receitas após fechar o formulário
+        fetchRecipes();
+    };
+
+    const handleRecipeFormClosed = () => {
+        // Limpar a receita selecionada somente após o formulário ter sido completamente fechado
+        setTimeout(() => {
+            setSelectedRecipe(null);
+        }, 100);
     };
 
     const handleAddRecipe = () => {
@@ -282,6 +296,18 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                             </Box>
                         </DialogContent>
                         <DialogActions>
+                            <Button 
+                                onClick={() => {
+                                    if (window.confirm(`Tem certeza que deseja excluir a receita "${selectedRecipe.name}"?`)) {
+                                        deleteRecipe(selectedRecipe.id);
+                                        setIsRecipeDetailOpen(false);
+                                    }
+                                }}
+                                color="error"
+                                sx={{ mr: 'auto' }}
+                            >
+                                Excluir
+                            </Button>
                             <Button onClick={() => setIsRecipeDetailOpen(false)}>
                                 Fechar
                             </Button>
@@ -301,6 +327,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                 open={isRecipeFormOpen}
                 onClose={handleCloseRecipeForm}
                 initialData={selectedRecipe || undefined}
+                onExited={handleRecipeFormClosed}
             />
         </>
     );
