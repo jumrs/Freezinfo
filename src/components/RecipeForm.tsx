@@ -13,11 +13,17 @@ import {
     List,
     ListItem,
     ListItemText,
-    ListItemSecondaryAction
+    ListItemSecondaryAction,
+    Grid,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    SelectChangeEvent
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { useRecipeStore } from '../store/recipeStore';
-import { Recipe } from '../types';
+import { Recipe, Ingredient } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface RecipeFormProps {
@@ -25,6 +31,20 @@ interface RecipeFormProps {
     onClose: () => void;
     initialData?: Recipe;
 }
+
+// Opções de unidades comuns para ingredientes
+const unitOptions = [
+    'unidade(s)',
+    'g',
+    'kg',
+    'ml',
+    'l',
+    'colher(es) de sopa',
+    'colher(es) de chá',
+    'xícara(s)',
+    'pitada(s)',
+    'a gosto'
+];
 
 export const RecipeForm: React.FC<RecipeFormProps> = ({
     open,
@@ -35,12 +55,16 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     const [recipe, setRecipe] = useState<Recipe>({
         id: '',
         name: '',
-        ingredients: [''],
+        ingredients: [{ name: '' }],
         instructions: '',
         dateAdded: new Date().toISOString(),
     });
     const [error, setError] = useState<string | null>(null);
-    const [newIngredient, setNewIngredient] = useState<string>('');
+    const [newIngredient, setNewIngredient] = useState<Ingredient>({
+        name: '',
+        quantity: undefined,
+        unit: ''
+    });
 
     // Reset form when dialog opens/closes or initialData changes
     useEffect(() => {
@@ -51,13 +75,17 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
                 setRecipe({
                     id: uuidv4(),
                     name: '',
-                    ingredients: [''],
+                    ingredients: [{ name: '' }],
                     instructions: '',
                     dateAdded: new Date().toISOString(),
                 });
             }
             setError(null);
-            setNewIngredient('');
+            setNewIngredient({
+                name: '',
+                quantity: undefined,
+                unit: ''
+            });
         }
     }, [open, initialData]);
 
@@ -70,13 +98,31 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         setError(null);
     };
 
+    const handleNewIngredientChange = (field: keyof Ingredient) => (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent
+    ) => {
+        const value = e.target.value;
+        setNewIngredient(prev => ({
+            ...prev,
+            [field]: field === 'quantity' ? (value === '' ? undefined : Number(value)) : value
+        }));
+    };
+
     const handleAddIngredient = () => {
-        if (newIngredient.trim()) {
+        if (newIngredient.name.trim()) {
             setRecipe(prev => ({
                 ...prev,
-                ingredients: [...prev.ingredients, newIngredient.trim()]
+                ingredients: [...prev.ingredients, { 
+                    name: newIngredient.name.trim(),
+                    quantity: newIngredient.quantity,
+                    unit: newIngredient.unit
+                }]
             }));
-            setNewIngredient('');
+            setNewIngredient({
+                name: '',
+                quantity: undefined,
+                unit: ''
+            });
         }
     };
 
@@ -87,10 +133,17 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         }));
     };
 
-    const handleUpdateIngredient = (index: number, value: string) => {
+    const handleUpdateIngredient = (index: number, field: keyof Ingredient) => (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent
+    ) => {
+        const value = e.target.value;
+        
         setRecipe(prev => {
             const newIngredients = [...prev.ingredients];
-            newIngredients[index] = value;
+            newIngredients[index] = {
+                ...newIngredients[index],
+                [field]: field === 'quantity' ? (value === '' ? undefined : Number(value)) : value
+            };
             return {
                 ...prev,
                 ingredients: newIngredients
@@ -104,7 +157,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
             return;
         }
 
-        if (recipe.ingredients.length === 0 || recipe.ingredients.some(ing => !ing.trim())) {
+        if (recipe.ingredients.length === 0 || recipe.ingredients.some(ing => !ing.name.trim())) {
             setError('Adicione pelo menos um ingrediente válido');
             return;
         }
@@ -164,49 +217,119 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
                     
                     <List sx={{ mb: 2 }}>
                         {recipe.ingredients.map((ingredient, index) => (
-                            <ListItem key={index} sx={{ px: 0 }}>
-                                <TextField
-                                    fullWidth
-                                    value={ingredient}
-                                    onChange={(e) => handleUpdateIngredient(index, e.target.value)}
-                                    placeholder="Ingrediente"
-                                    sx={{ '& .MuiOutlinedInput-root': { minHeight: '50px' } }}
-                                />
-                                <ListItemSecondaryAction>
-                                    <IconButton 
-                                        edge="end" 
-                                        onClick={() => handleRemoveIngredient(index)}
-                                        disabled={recipe.ingredients.length <= 1}
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </ListItemSecondaryAction>
+                            <ListItem key={index} sx={{ px: 0, py: 1 }}>
+                                <Grid container spacing={2} alignItems="center">
+                                    <Grid item xs={2}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Qtd"
+                                            value={ingredient.quantity || ''}
+                                            onChange={handleUpdateIngredient(index, 'quantity')}
+                                            inputProps={{ min: 0, step: 0.1 }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <FormControl fullWidth>
+                                            <InputLabel>Unidade</InputLabel>
+                                            <Select
+                                                value={ingredient.unit || ''}
+                                                onChange={handleUpdateIngredient(index, 'unit')}
+                                                label="Unidade"
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Nenhuma</em>
+                                                </MenuItem>
+                                                {unitOptions.map((unit) => (
+                                                    <MenuItem key={unit} value={unit}>
+                                                        {unit}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Ingrediente"
+                                            value={ingredient.name}
+                                            onChange={handleUpdateIngredient(index, 'name')}
+                                            error={!ingredient.name.trim()}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={1}>
+                                        <IconButton 
+                                            edge="end" 
+                                            onClick={() => handleRemoveIngredient(index)}
+                                            disabled={recipe.ingredients.length <= 1}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Grid>
+                                </Grid>
                             </ListItem>
                         ))}
                     </List>
 
-                    <Box sx={{ display: 'flex', mb: 3 }}>
-                        <TextField
-                            fullWidth
-                            label="Novo Ingrediente"
-                            value={newIngredient}
-                            onChange={(e) => setNewIngredient(e.target.value)}
-                            sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' } }}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter' && newIngredient.trim()) {
-                                    handleAddIngredient();
-                                }
-                            }}
-                        />
-                        <Button 
-                            variant="contained" 
-                            onClick={handleAddIngredient}
-                            disabled={!newIngredient.trim()}
-                            sx={{ ml: 1, minWidth: '120px' }}
-                        >
-                            <AddIcon sx={{ mr: 1 }} />
-                            Adicionar
-                        </Button>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            Adicionar Novo Ingrediente
+                        </Typography>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={2}>
+                                <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Qtd"
+                                    value={newIngredient.quantity || ''}
+                                    onChange={handleNewIngredientChange('quantity')}
+                                    inputProps={{ min: 0, step: 0.1 }}
+                                />
+                            </Grid>
+                            <Grid item xs={3}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Unidade</InputLabel>
+                                    <Select
+                                        value={newIngredient.unit || ''}
+                                        onChange={handleNewIngredientChange('unit')}
+                                        label="Unidade"
+                                    >
+                                        <MenuItem value="">
+                                            <em>Nenhuma</em>
+                                        </MenuItem>
+                                        {unitOptions.map((unit) => (
+                                            <MenuItem key={unit} value={unit}>
+                                                {unit}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={5}>
+                                <TextField
+                                    fullWidth
+                                    label="Ingrediente"
+                                    value={newIngredient.name}
+                                    onChange={handleNewIngredientChange('name')}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter' && newIngredient.name.trim()) {
+                                            handleAddIngredient();
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={2}>
+                                <Button 
+                                    variant="contained" 
+                                    onClick={handleAddIngredient}
+                                    disabled={!newIngredient.name.trim()}
+                                    fullWidth
+                                    sx={{ height: '100%' }}
+                                >
+                                    <AddIcon />
+                                </Button>
+                            </Grid>
+                        </Grid>
                     </Box>
 
                     <Typography variant="subtitle1" sx={{ mb: 1 }}>

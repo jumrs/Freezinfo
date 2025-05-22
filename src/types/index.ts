@@ -28,10 +28,16 @@ export interface SearchFilters {
     drawer?: number;
 }
 
+export interface Ingredient {
+    name: string;
+    quantity?: number;
+    unit?: string;
+}
+
 export interface Recipe {
     id: string;
     name: string;
-    ingredients: string[];
+    ingredients: Ingredient[];
     instructions: string;
     prepTime?: number; // em minutos
     cookTime?: number; // em minutos

@@ -76,6 +76,21 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
         return formatTime(prepTime + cookTime);
     };
 
+    // Formata o ingrediente com quantidade e unidade
+    const formatIngredient = (ingredient: Recipe['ingredients'][0]) => {
+        const { name, quantity, unit } = ingredient;
+        
+        if (quantity && unit) {
+            return `${quantity} ${unit} de ${name}`;
+        } else if (quantity) {
+            return `${quantity} ${name}`;
+        } else if (unit) {
+            return `${unit} de ${name}`;
+        }
+        
+        return name;
+    };
+
     return (
         <>
             <Box sx={{ flexGrow: 1 }}>
@@ -246,7 +261,7 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                                 <Box component="ul" sx={{ pl: 2 }}>
                                     {selectedRecipe.ingredients.map((ingredient, index) => (
                                         <Typography component="li" key={index} sx={{ mb: 0.5 }}>
-                                            {ingredient}
+                                            {formatIngredient(ingredient)}
                                         </Typography>
                                     ))}
                                 </Box>
