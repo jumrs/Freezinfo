@@ -1,34 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box,
-    Paper,
-    Typography,
+    Button,
     List,
     ListItem,
-    ListItemText,
     ListItemIcon,
-    IconButton,
+    ListItemText,
     Checkbox,
-    Button,
-    Divider,
-    Tooltip,
+    IconButton,
+    Typography,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
+    Tooltip,
+    Divider
 } from '@mui/material';
 import {
-    Add as AddIcon,
     Delete as DeleteIcon,
     Edit as EditIcon,
+    AddShoppingCart as AddIcon,
     DeleteSweep as DeleteSweepIcon,
-    KitchenOutlined as FreezerIcon
+    Kitchen as FreezerIcon
 } from '@mui/icons-material';
 import { useShoppingListStore } from '../store/shoppingListStore';
 import { useFreezerStore } from '../store/freezerStore';
-import { ShoppingListItem } from '../types';
 import { ShoppingListItemForm } from './ShoppingListItemForm';
 import { FoodItemForm } from './FoodItemForm';
+import { ShoppingListItem } from '../types';
 
 export const ShoppingList: React.FC = () => {
     const { items, loading, fetchItems, deleteItem, toggleItemCheck, clearCheckedItems } = useShoppingListStore();
@@ -73,54 +72,48 @@ export const ShoppingList: React.FC = () => {
         setIsFormOpen(false);
     };
     
-    const formatItemLabel = (item: ShoppingListItem): string => {
-        if (item.quantity && item.unit) {
-            return `${item.quantity} ${item.unit} ${item.name}`;
-        } else if (item.quantity) {
-            return `${item.quantity} ${item.name}`;
-        } else {
-            return item.name;
+    const handleDeleteItem = (id: string) => {
+        if (window.confirm('Deseja realmente remover este item?')) {
+            deleteItem(id);
+        }
+    };
+    
+    const handleToggleCheck = (id: string) => {
+        toggleItemCheck(id);
+    };
+    
+    const handleClearCheckedItems = () => {
+        const checkedItems = items.filter(item => item.checked);
+        if (checkedItems.length > 0) {
+            setCheckedItemsToProcess(checkedItems);
+            setConfirmDialogOpen(true);
         }
     };
 
-    // Verifica se o item já existe no freezer
-    const findItemInFreezer = (shoppingItem: ShoppingListItem) => {
-        return freezerItems.find(freezerItem => 
-            freezerItem.name.toLowerCase() === shoppingItem.name.toLowerCase()
+    // Processar um item para adicionar no freezer
+    const processItemForFreezer = (item: ShoppingListItem) => {
+        const existingItem = freezerItems.find(
+            freezerItem => freezerItem.name.toLowerCase() === item.name.toLowerCase()
         );
-    };
 
-    // Processar um item para adicionar ao freezer
-    const processItemForFreezer = (shoppingItem: ShoppingListItem) => {
-        const existingFreezerItem = findItemInFreezer(shoppingItem);
-        
-        if (existingFreezerItem) {
-            // Se o item já existe, aumenta a quantidade e continua o processamento
+        if (existingItem) {
+            // Se o item já existe, apenas incrementa a quantidade
+            const newQuantity = (existingItem.quantity || 1) + (item.quantity || 1);
             updateFoodItem({
-                ...existingFreezerItem,
-                quantity: existingFreezerItem.quantity + (shoppingItem.quantity || 1)
-            }).then(() => {
-                setProcessingIndex(prev => prev + 1);
+                ...existingItem,
+                quantity: newQuantity
             });
+            // Continua para o próximo item
+            setProcessingIndex(prev => prev + 1);
         } else {
-            // Se não existe, abre o formulário para adicionar novo item
-            setCurrentShoppingItem(shoppingItem);
+            // Se é um novo item, abre o formulário para confirmar os detalhes antes de adicionar
+            setCurrentShoppingItem(item);
             setIsFoodItemFormOpen(true);
         }
     };
 
-    // Inicia o processo de limpar itens comprados
-    const handleClearCheckedItems = () => {
-        const checkedItems = items.filter(item => item.checked);
-        if (checkedItems.length === 0) return;
-        
-        setConfirmDialogOpen(true);
-    };
-
-    // Quando o usuário confirma que quer adicionar ao freezer
+    // Quando o usuário opta por adicionar ao freezer
     const handleConfirmAddToFreezer = () => {
-        const checkedItems = items.filter(item => item.checked);
-        setCheckedItemsToProcess(checkedItems);
         setProcessingIndex(0);
         setConfirmDialogOpen(false);
     };
@@ -139,10 +132,23 @@ export const ShoppingList: React.FC = () => {
         setProcessingIndex(prev => prev + 1);
     };
     
+    // Formatar o rótulo do item da lista de compras
+    const formatItemLabel = (item: ShoppingListItem): string => {
+        let label = item.name;
+        
+        if (item.quantity) {
+            label += ` - ${item.quantity}`;
+            if (item.unit) {
+                label += ` ${item.unit}`;
+            }
+        }
+        
+        return label;
+    };
+    
     return (
-        <Paper sx={{ p: 2 }}>
+        <>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Lista de Compras</Typography>
                 <Box>
                     <Button
                         startIcon={<DeleteSweepIcon />}
@@ -195,13 +201,8 @@ export const ShoppingList: React.FC = () => {
                                     <Tooltip title="Excluir">
                                         <IconButton 
                                             edge="end" 
-                                            aria-label="deletar"
-                                            onClick={() => {
-                                                if (window.confirm(`Deseja remover "${item.name}" da lista de compras?`)) {
-                                                    deleteItem(item.id);
-                                                }
-                                            }}
-                                            color="error"
+                                            aria-label="excluir" 
+                                            onClick={() => handleDeleteItem(item.id)}
                                             size="small"
                                         >
                                             <DeleteIcon />
@@ -209,18 +210,13 @@ export const ShoppingList: React.FC = () => {
                                     </Tooltip>
                                 </Box>
                             }
-                            sx={{
-                                py: 1,
-                                px: 2,
-                                backgroundColor: item.checked ? 'rgba(76, 175, 80, 0.08)' : 'transparent',
-                            }}
                         >
                             <ListItemIcon>
                                 <Checkbox
                                     edge="start"
-                                    checked={item.checked}
-                                    onChange={() => toggleItemCheck(item.id)}
-                                    color="success"
+                                    checked={item.checked || false}
+                                    onChange={() => handleToggleCheck(item.id)}
+                                    inputProps={{ 'aria-labelledby': item.id }}
                                 />
                             </ListItemIcon>
                             <ListItemText
@@ -295,6 +291,6 @@ export const ShoppingList: React.FC = () => {
                     }}
                 />
             )}
-        </Paper>
+        </>
     );
 }; 

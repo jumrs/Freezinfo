@@ -15,7 +15,9 @@ import {
     InputLabel,
     ButtonBase,
     Menu,
-    Tooltip
+    Tooltip,
+    Button,
+    Divider
 } from '@mui/material';
 import { 
     Add as AddIcon, 
@@ -23,7 +25,8 @@ import {
     Settings as SettingsIcon,
     DarkMode as DarkModeIcon,
     LightMode as LightModeIcon,
-    MenuBook as MenuBookIcon
+    MenuBook as MenuBookIcon,
+    Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useFreezerStore } from '../store/freezerStore';
 import { useCategoryStore } from '../store/categoryStore';
@@ -34,10 +37,14 @@ import { RecipeForm } from './RecipeForm';
 import { RecipeList } from './RecipeList';
 import { ShoppingList } from './ShoppingList';
 import { ColorModeContext } from '../App';
+import { DraggableWidget } from './DraggableWidget';
+import { useUserPreferencesStore, WidgetType } from '../store/userPreferencesStore';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 export const FreezerManager: React.FC = () => {
     const { filteredItems, setFilters, loading, items, fetchItems, lastSelectedCategory, setLastSelectedCategory, getSortedItems } = useFreezerStore();
     const { categories } = useCategoryStore();
+    const { widgetOrder, updateWidgetOrder, resetToDefault } = useUserPreferencesStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>(lastSelectedCategory);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -130,6 +137,344 @@ export const FreezerManager: React.FC = () => {
         handleSettingsClose();
     };
 
+    // Função para lidar com o término de uma operação de arrastar e soltar
+    const handleDragEnd = (result: DropResult) => {
+        const { destination, source } = result;
+
+        // Abandonar se não houver destino ou se a origem e o destino forem o mesmo
+        if (!destination || 
+            (destination.droppableId === source.droppableId && 
+            destination.index === source.index)) {
+            return;
+        }
+
+        // Cria uma cópia da ordem atual dos widgets
+        const newOrder = Array.from(widgetOrder);
+        
+        // Remove o item arrastado da sua posição original
+        const [removed] = newOrder.splice(source.index, 1);
+        
+        // Insere o item na nova posição
+        newOrder.splice(destination.index, 0, removed);
+        
+        // Atualiza o estado
+        updateWidgetOrder(newOrder);
+    };
+
+    // Função para resetar a ordem dos widgets para o padrão
+    const handleResetWidgetOrder = () => {
+        resetToDefault();
+    };
+
+    // Renderiza os widgets de acordo com a ordem personalizada
+    const renderWidgetByType = (type: WidgetType, index: number) => {
+        switch (type) {
+            case 'shopping-list':
+                return (
+                    <Draggable key="shopping-list" draggableId="shopping-list" index={index}>
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                style={{
+                                    ...provided.draggableProps.style
+                                }}
+                            >
+                                <DraggableWidget 
+                                    title="Lista de Compras" 
+                                    isDragging={snapshot.isDragging}
+                                    dragHandleProps={provided.dragHandleProps}
+                                >
+                                    <ShoppingList />
+                                </DraggableWidget>
+                            </div>
+                        )}
+                    </Draggable>
+                );
+            case 'search':
+                return (
+                    <Draggable key="search" draggableId="search" index={index}>
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                style={{
+                                    ...provided.draggableProps.style
+                                }}
+                            >
+                                <DraggableWidget 
+                                    title="Busca" 
+                                    isDragging={snapshot.isDragging}
+                                    dragHandleProps={provided.dragHandleProps}
+                                >
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        <TextField
+                                            fullWidth
+                                            variant="outlined"
+                                            placeholder="Buscar item..."
+                                            value={searchTerm}
+                                            onChange={handleSearch}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    performSearch();
+                                                }
+                                            }}
+                                            InputProps={{
+                                                style: { fontSize: '1.1rem' },
+                                                endAdornment: (
+                                                    <IconButton 
+                                                        onClick={performSearch}
+                                                        edge="end"
+                                                        sx={{ p: 1.5 }}
+                                                    >
+                                                        <SearchIcon fontSize="medium" />
+                                                    </IconButton>
+                                                )
+                                            }}
+                                            sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' } }}
+                                        />
+                                        <Grid container spacing={2}>
+                                            {/* Botão Todos */}
+                                            <Grid item xs={12} sm={6} md={2.4}>
+                                                <ButtonBase 
+                                                    onClick={() => {
+                                                        if (selectedCategory === "todos" && showResults) {
+                                                            // Se já está selecionado, desseleciona
+                                                            setSelectedCategory("");
+                                                            setFilters({});
+                                                            setShowResults(false);
+                                                        } else {
+                                                            // Se não está selecionado, seleciona
+                                                            setSelectedCategory("todos");
+                                                            setFilters({});  // Sem filtro de categoria para mostrar todos
+                                                            setShowResults(true);
+                                                        }
+                                                    }}
+                                                    sx={{ width: '100%' }}
+                                                >
+                                                    <Paper 
+                                                        sx={{ 
+                                                            p: 2, 
+                                                            display: 'flex', 
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '100%',
+                                                            minHeight: '90px',
+                                                            bgcolor: selectedCategory === "todos" && showResults ? 'primary.main' : 'primary.light',
+                                                            color: 'primary.contrastText',
+                                                            transition: 'all 0.2s',
+                                                            '&:hover': {
+                                                                bgcolor: 'primary.main',
+                                                                transform: 'scale(1.02)',
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Typography 
+                                                            variant="h6" 
+                                                            align="center"
+                                                            sx={{
+                                                                fontSize: '1rem',
+                                                                whiteSpace: 'normal',
+                                                                wordBreak: 'break-word',
+                                                                lineHeight: '1.3',
+                                                            }}
+                                                        >
+                                                            Todos
+                                                        </Typography>
+                                                    </Paper>
+                                                </ButtonBase>
+                                            </Grid>
+                                            {/* Outras categorias */}
+                                            {categories.map((category) => (
+                                                <Grid item xs={12} sm={6} md={2.4} key={category.id}>
+                                                    <ButtonBase 
+                                                        onClick={() => {
+                                                            if (selectedCategory === category.id && showResults) {
+                                                                // Se já está selecionado, desseleciona
+                                                                setSelectedCategory("");
+                                                                setFilters({});
+                                                                setShowResults(false);
+                                                            } else {
+                                                                // Se não está selecionado, seleciona
+                                                                setSelectedCategory(category.id);
+                                                                setFilters({ category: category.id });
+                                                                setShowResults(true);
+                                                            }
+                                                        }}
+                                                        sx={{ width: '100%' }}
+                                                    >
+                                                        <Paper 
+                                                            sx={{ 
+                                                                p: 2, 
+                                                                display: 'flex', 
+                                                                flexDirection: 'column',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                width: '100%',
+                                                                minHeight: '90px',
+                                                                bgcolor: selectedCategory === category.id && showResults ? 'primary.main' : 'primary.light',
+                                                                color: 'primary.contrastText',
+                                                                transition: 'all 0.2s',
+                                                                '&:hover': {
+                                                                    bgcolor: 'primary.main',
+                                                                    transform: 'scale(1.02)',
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Typography 
+                                                                variant="h6" 
+                                                                align="center"
+                                                                sx={{
+                                                                    fontSize: '1rem',
+                                                                    whiteSpace: 'normal',
+                                                                    wordBreak: 'break-word',
+                                                                    lineHeight: '1.3',
+                                                                }}
+                                                            >
+                                                                {getCategoryName(category.id)}
+                                                            </Typography>
+                                                        </Paper>
+                                                    </ButtonBase>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </Box>
+
+                                    {/* Search Results Section */}
+                                    {showResults && (
+                                        <Box sx={{ mt: 3 }}>
+                                            <Divider sx={{ my: 2 }} />
+                                            <Typography variant="h6" gutterBottom>
+                                                {selectedCategory === "todos" ? "Todos os Itens" : "Resultados da Busca"}
+                                            </Typography>
+                                            {loading ? (
+                                                <Typography>Buscando...</Typography>
+                                            ) : (
+                                                <>
+                                                    {(selectedCategory === "todos" ? getSortedItems() : filteredItems()).length > 0 ? (
+                                                        <Grid container spacing={2}>
+                                                            {(selectedCategory === "todos" ? getSortedItems() : filteredItems()).map((item) => (
+                                                                <Grid item xs={12} sm={6} md={4} key={item.id}>
+                                                                    <Paper 
+                                                                        sx={{ 
+                                                                            p: 2.5,
+                                                                            display: 'flex', 
+                                                                            flexDirection: 'column',
+                                                                            height: '100%',
+                                                                            minHeight: '120px',
+                                                                            cursor: 'pointer',
+                                                                            '&:hover': {
+                                                                                bgcolor: 'action.hover'
+                                                                            }
+                                                                        }}
+                                                                        onClick={() => handleEditItem(item)}
+                                                                    >
+                                                                        <Typography variant="h6" sx={{ fontSize: '1.1rem', mb: 0.5 }}>{item.name}</Typography>
+                                                                        <Typography color="text.secondary" sx={{ fontSize: '0.9rem', mb: 0.5 }}>
+                                                                            {getCategoryName(item.category)}
+                                                                        </Typography>
+                                                                        <Typography sx={{ fontSize: '0.9rem' }}>
+                                                                            Quantidade: {item.quantity}
+                                                                        </Typography>
+                                                                        {item.notes && (
+                                                                            <Typography color="text.secondary" sx={{ fontSize: '0.85rem', mt: 1, fontStyle: 'italic' }}>
+                                                                                {item.notes}
+                                                                            </Typography>
+                                                                        )}
+                                                                    </Paper>
+                                                                </Grid>
+                                                            ))}
+                                                        </Grid>
+                                                    ) : (
+                                                        <Box sx={{ 
+                                                            textAlign: 'center', 
+                                                            py: 4,
+                                                            color: 'text.secondary'
+                                                        }}>
+                                                            <Typography variant="h6">
+                                                                Opa! Parece que o seu freezer não possui isso :(
+                                                            </Typography>
+                                                        </Box>
+                                                    )}
+                                                </>
+                                            )}
+                                        </Box>
+                                    )}
+                                </DraggableWidget>
+                            </div>
+                        )}
+                    </Draggable>
+                );
+            case 'recent-items':
+                return (
+                    <Draggable key="recent-items" draggableId="recent-items" index={index}>
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                style={{
+                                    ...provided.draggableProps.style
+                                }}
+                            >
+                                <DraggableWidget 
+                                    title="Adicionados Recentemente" 
+                                    isDragging={snapshot.isDragging}
+                                    dragHandleProps={provided.dragHandleProps}
+                                >
+                                    <Grid container spacing={2}>
+                                        {recentItems.map((item) => (
+                                            <Grid item xs={12} sm={6} md={2.4} key={item.id}>
+                                                <ButtonBase 
+                                                    onClick={() => handleEditItem(item)}
+                                                    sx={{ width: '100%', textAlign: 'left' }}
+                                                >
+                                                    <Paper 
+                                                        sx={{ 
+                                                            p: 2.5,
+                                                            display: 'flex', 
+                                                            flexDirection: 'column',
+                                                            height: '100%',
+                                                            width: '100%',
+                                                            minHeight: '100px',
+                                                            bgcolor: 'primary.light',
+                                                            color: 'primary.contrastText',
+                                                            transition: 'all 0.2s',
+                                                            '&:hover': {
+                                                                bgcolor: 'primary.main',
+                                                                transform: 'scale(1.02)',
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Typography variant="subtitle1" noWrap sx={{ fontSize: '1rem', mb: 0.5 }}>
+                                                            {item.name}
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem', mb: 0.5 }}>
+                                                            {getCategoryName(item.category)}
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
+                                                            Qtd: {item.quantity}
+                                                        </Typography>
+                                                        {item.notes && (
+                                                            <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem', mt: 0.5, fontStyle: 'italic' }}>
+                                                                {item.notes.length > 20 ? `${item.notes.substring(0, 20)}...` : item.notes}
+                                                            </Typography>
+                                                        )}
+                                                    </Paper>
+                                                </ButtonBase>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </DraggableWidget>
+                            </div>
+                        )}
+                    </Draggable>
+                );
+            default:
+                return null;
+        }
+    };
+
     if (showRecipeList) {
         return <RecipeList onBack={handleCloseRecipeList} />;
     }
@@ -184,6 +529,9 @@ export const FreezerManager: React.FC = () => {
                         <MenuItem onClick={handleManageCategories}>
                             Gerenciar Categorias
                         </MenuItem>
+                        <MenuItem onClick={handleResetWidgetOrder}>
+                            Restaurar Ordem Padrão dos Widgets
+                        </MenuItem>
                     </Menu>
                     <IconButton 
                         color="inherit" 
@@ -213,265 +561,24 @@ export const FreezerManager: React.FC = () => {
             />
 
             <Container maxWidth="lg" sx={{ mt: 4 }}>
-                <Grid container spacing={3}>
-                    {/* Shopping List Section */}
-                    <Grid item xs={12}>
-                        <ShoppingList />
-                    </Grid>
-
-                    {/* Search and Filter Section */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <TextField
-                                    fullWidth
-                                    variant="outlined"
-                                    placeholder="Buscar item..."
-                                    value={searchTerm}
-                                    onChange={handleSearch}
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter') {
-                                            performSearch();
-                                        }
-                                    }}
-                                    InputProps={{
-                                        style: { fontSize: '1.1rem' },
-                                        endAdornment: (
-                                            <IconButton 
-                                                onClick={performSearch}
-                                                edge="end"
-                                                sx={{ p: 1.5 }}
-                                            >
-                                                <SearchIcon fontSize="medium" />
-                                            </IconButton>
-                                        )
-                                    }}
-                                    sx={{ '& .MuiOutlinedInput-root': { minHeight: '56px' } }}
-                                />
-                                <Grid container spacing={2}>
-                                    {/* Botão Todos */}
-                                    <Grid item xs={12} sm={6} md={2.4}>
-                                        <ButtonBase 
-                                            onClick={() => {
-                                                if (selectedCategory === "todos" && showResults) {
-                                                    // Se já está selecionado, desseleciona
-                                                    setSelectedCategory("");
-                                                    setFilters({});
-                                                    setShowResults(false);
-                                                } else {
-                                                    // Se não está selecionado, seleciona
-                                                    setSelectedCategory("todos");
-                                                    setFilters({});  // Sem filtro de categoria para mostrar todos
-                                                    setShowResults(true);
-                                                }
-                                            }}
-                                            sx={{ width: '100%' }}
-                                        >
-                                            <Paper 
-                                                sx={{ 
-                                                    p: 2, 
-                                                    display: 'flex', 
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    width: '100%',
-                                                    minHeight: '90px',
-                                                    bgcolor: selectedCategory === "todos" && showResults ? 'primary.main' : 'primary.light',
-                                                    color: 'primary.contrastText',
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': {
-                                                        bgcolor: 'primary.main',
-                                                        transform: 'scale(1.02)',
-                                                    }
-                                                }}
-                                            >
-                                                <Typography 
-                                                    variant="h6" 
-                                                    align="center"
-                                                    sx={{
-                                                        fontSize: '1rem',
-                                                        whiteSpace: 'normal',
-                                                        wordBreak: 'break-word',
-                                                        lineHeight: '1.3',
-                                                    }}
-                                                >
-                                                    Todos
-                                                </Typography>
-                                            </Paper>
-                                        </ButtonBase>
-                                    </Grid>
-                                    {/* Outras categorias */}
-                                    {categories.map((category) => (
-                                        <Grid item xs={12} sm={6} md={2.4} key={category.id}>
-                                            <ButtonBase 
-                                                onClick={() => {
-                                                    if (selectedCategory === category.id && showResults) {
-                                                        // Se já está selecionado, desseleciona
-                                                        setSelectedCategory("");
-                                                        setFilters({});
-                                                        setShowResults(false);
-                                                    } else {
-                                                        // Se não está selecionado, seleciona
-                                                        setSelectedCategory(category.id);
-                                                        setFilters({ category: category.id });
-                                                        setShowResults(true);
-                                                    }
-                                                }}
-                                                sx={{ width: '100%' }}
-                                            >
-                                                <Paper 
-                                                    sx={{ 
-                                                        p: 2, 
-                                                        display: 'flex', 
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        width: '100%',
-                                                        minHeight: '90px',
-                                                        bgcolor: selectedCategory === category.id && showResults ? 'primary.main' : 'primary.light',
-                                                        color: 'primary.contrastText',
-                                                        transition: 'all 0.2s',
-                                                        '&:hover': {
-                                                            bgcolor: 'primary.main',
-                                                            transform: 'scale(1.02)',
-                                                        }
-                                                    }}
-                                                >
-                                                    <Typography 
-                                                        variant="h6" 
-                                                        align="center"
-                                                        sx={{
-                                                            fontSize: '1rem',
-                                                            whiteSpace: 'normal',
-                                                            wordBreak: 'break-word',
-                                                            lineHeight: '1.3',
-                                                        }}
-                                                    >
-                                                        {getCategoryName(category.id)}
-                                                    </Typography>
-                                                </Paper>
-                                            </ButtonBase>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-                        </Paper>
-                    </Grid>
-
-                    {/* Search Results Section */}
-                    {showResults && (
-                        <Grid item xs={12}>
-                            <Paper sx={{ p: 2 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    {selectedCategory === "todos" ? "Todos os Itens" : "Resultados da Busca"}
-                                </Typography>
-                                {loading ? (
-                                    <Typography>Buscando...</Typography>
-                                ) : (
-                                    <>
-                                        {(selectedCategory === "todos" ? getSortedItems() : filteredItems()).length > 0 ? (
-                                            <Grid container spacing={2}>
-                                                {(selectedCategory === "todos" ? getSortedItems() : filteredItems()).map((item) => (
-                                                    <Grid item xs={12} sm={6} md={4} key={item.id}>
-                                                        <Paper 
-                                                            sx={{ 
-                                                                p: 2.5,
-                                                                display: 'flex', 
-                                                                flexDirection: 'column',
-                                                                height: '100%',
-                                                                minHeight: '120px',
-                                                                cursor: 'pointer',
-                                                                '&:hover': {
-                                                                    bgcolor: 'action.hover'
-                                                                }
-                                                            }}
-                                                            onClick={() => handleEditItem(item)}
-                                                        >
-                                                            <Typography variant="h6" sx={{ fontSize: '1.1rem', mb: 0.5 }}>{item.name}</Typography>
-                                                            <Typography color="text.secondary" sx={{ fontSize: '0.9rem', mb: 0.5 }}>
-                                                                {getCategoryName(item.category)}
-                                                            </Typography>
-                                                            <Typography sx={{ fontSize: '0.9rem' }}>
-                                                                Quantidade: {item.quantity}
-                                                            </Typography>
-                                                            {item.notes && (
-                                                                <Typography color="text.secondary" sx={{ fontSize: '0.85rem', mt: 1, fontStyle: 'italic' }}>
-                                                                    {item.notes}
-                                                                </Typography>
-                                                            )}
-                                                        </Paper>
-                                                    </Grid>
-                                                ))}
-                                            </Grid>
-                                        ) : (
-                                            <Box sx={{ 
-                                                textAlign: 'center', 
-                                                py: 4,
-                                                color: 'text.secondary'
-                                            }}>
-                                                <Typography variant="h6">
-                                                    Opa! Parece que o seu freezer não possui isso :(
-                                                </Typography>
-                                            </Box>
-                                        )}
-                                    </>
-                                )}
-                            </Paper>
-                        </Grid>
-                    )}
-
-                    {/* Recent Items Section */}
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2 }}>
-                            <Typography variant="h6" gutterBottom>
-                                Adicionados Recentemente
-                            </Typography>
-                            <Grid container spacing={2}>
-                                {recentItems.map((item) => (
-                                    <Grid item xs={12} sm={6} md={2.4} key={item.id}>
-                                        <ButtonBase 
-                                            onClick={() => handleEditItem(item)}
-                                            sx={{ width: '100%', textAlign: 'left' }}
-                                        >
-                                            <Paper 
-                                                sx={{ 
-                                                    p: 2.5,
-                                                    display: 'flex', 
-                                                    flexDirection: 'column',
-                                                    height: '100%',
-                                                    width: '100%',
-                                                    minHeight: '100px',
-                                                    bgcolor: 'primary.light',
-                                                    color: 'primary.contrastText',
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': {
-                                                        bgcolor: 'primary.main',
-                                                        transform: 'scale(1.02)',
-                                                    }
-                                                }}
-                                            >
-                                                <Typography variant="subtitle1" noWrap sx={{ fontSize: '1rem', mb: 0.5 }}>
-                                                    {item.name}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem', mb: 0.5 }}>
-                                                    {getCategoryName(item.category)}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem' }}>
-                                                    Qtd: {item.quantity}
-                                                </Typography>
-                                                {item.notes && (
-                                                    <Typography variant="body2" sx={{ opacity: 0.8, fontSize: '0.85rem', mt: 0.5, fontStyle: 'italic' }}>
-                                                        {item.notes.length > 20 ? `${item.notes.substring(0, 20)}...` : item.notes}
-                                                    </Typography>
-                                                )}
-                                            </Paper>
-                                        </ButtonBase>
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Paper>
-                    </Grid>
-                </Grid>
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Typography variant="body2" color="textSecondary" sx={{ fontStyle: 'italic', display: 'flex', alignItems: 'center' }}>
+                        Arraste e solte os widgets para reordená-los
+                    </Typography>
+                </Box>
+                <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId="widgets">
+                        {(provided) => (
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                            >
+                                {widgetOrder.map((widgetType, index) => renderWidgetByType(widgetType, index))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                </DragDropContext>
             </Container>
         </Box>
     );
