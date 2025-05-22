@@ -28,16 +28,32 @@ interface RecipeListProps {
 
 export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
     const { recipes, loading, setFilters, filteredRecipes, fetchRecipes, deleteRecipe } = useRecipeStore();
-    const { items: freezerItems } = useFreezerStore();
+    const { items: freezerItems, fetchItems } = useFreezerStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
     const [isRecipeDetailOpen, setIsRecipeDetailOpen] = useState(false);
+    const [availabilityMap, setAvailabilityMap] = useState<Record<string, boolean>>({});
 
     // Atualizar a lista de receitas quando o componente for montado
     useEffect(() => {
         fetchRecipes();
-    }, [fetchRecipes]);
+        fetchItems(); // Garantir que os itens do freezer estejam atualizados
+    }, [fetchRecipes, fetchItems]);
+
+    // Verificar disponibilidade de ingredientes sempre que as receitas ou itens do freezer mudarem
+    useEffect(() => {
+        const newAvailabilityMap: Record<string, boolean> = {};
+        
+        recipes.forEach(recipe => {
+            const allAvailable = recipe.ingredients.every(ingredient => 
+                checkIngredientAvailability(ingredient).available
+            );
+            newAvailabilityMap[recipe.id] = allAvailable;
+        });
+        
+        setAvailabilityMap(newAvailabilityMap);
+    }, [recipes, freezerItems]);
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         const term = event.target.value;
@@ -75,8 +91,10 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
     };
 
     const formatTime = (minutes?: number) => {
-        if (!minutes) return '';
+        // Se minutes for undefined ou null, retorna string vazia
+        if (minutes === undefined || minutes === null) return '';
         
+        // Mesmo que seja zero, devemos exibir "0min"
         const hours = Math.floor(minutes / 60);
         const mins = minutes % 60;
         
@@ -87,9 +105,14 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
     };
 
     const getTotalTime = (recipe: Recipe) => {
-        const prepTime = recipe.prepTime || 0;
-        const cookTime = recipe.cookTime || 0;
-        return formatTime(prepTime + cookTime);
+        // Garantir que estamos trabalhando com números
+        const prepTime = typeof recipe.prepTime === 'number' ? recipe.prepTime : 0;
+        const cookTime = typeof recipe.cookTime === 'number' ? recipe.cookTime : 0;
+        
+        // Calcular o tempo total
+        const totalTime = prepTime + cookTime;
+        
+        return formatTime(totalTime);
     };
 
     const checkIngredientAvailability = (ingredient: Ingredient) => {
@@ -105,10 +128,19 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
             };
         }
 
+        // Se o ingrediente não tem quantidade especificada, consideramos disponível se existir no freezer
+        if (!ingredient.quantity) {
+            return {
+                available: freezerItem.quantity > 0,
+                freezerQuantity: freezerItem.quantity,
+                recipeQuantity: 0
+            };
+        }
+
         return {
-            available: ingredient.quantity ? freezerItem.quantity >= ingredient.quantity : true,
+            available: freezerItem.quantity >= ingredient.quantity,
             freezerQuantity: freezerItem.quantity,
-            recipeQuantity: ingredient.quantity || 0
+            recipeQuantity: ingredient.quantity
         };
     };
 
@@ -210,32 +242,42 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                                                 </Typography>
                                                 
                                                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1.5 }}>
-                                                    {recipe.prepTime && (
+                                                    {recipe.prepTime !== undefined && (
                                                         <Chip 
                                                             label={`Prep: ${formatTime(recipe.prepTime)}`} 
                                                             size="small"
                                                             variant="outlined"
                                                         />
                                                     )}
-                                                    {recipe.cookTime && (
+                                                    {recipe.cookTime !== undefined && (
                                                         <Chip 
                                                             label={`Cozimento: ${formatTime(recipe.cookTime)}`} 
                                                             size="small"
                                                             variant="outlined"
                                                         />
                                                     )}
-                                                    {(recipe.prepTime || recipe.cookTime) && (
-                                                        <Chip 
-                                                            label={`Total: ${getTotalTime(recipe)}`} 
+                                                    <Chip 
+                                                        label={`Total: ${getTotalTime(recipe)}`} 
+                                                        size="small"
+                                                        color="primary"
+                                                    />
+                                                </Box>
+                                                
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                                    <Typography color="text.secondary" sx={{ fontSize: '0.9rem' }}>
+                                                        {recipe.ingredients.length} ingredientes
+                                                    </Typography>
+                                                    {availabilityMap[recipe.id] && (
+                                                        <Chip
+                                                            icon={<CheckCircleIcon fontSize="small" />}
+                                                            label="Ingredientes disponíveis"
                                                             size="small"
-                                                            color="primary"
+                                                            color="success"
+                                                            variant="outlined"
+                                                            sx={{ fontSize: '0.75rem', height: '24px' }}
                                                         />
                                                     )}
                                                 </Box>
-                                                
-                                                <Typography color="text.secondary" sx={{ fontSize: '0.9rem', mb: 1 }}>
-                                                    {recipe.ingredients.length} ingredientes
-                                                </Typography>
                                                 
                                                 {recipe.servings && (
                                                     <Typography color="text.secondary" sx={{ fontSize: '0.9rem' }}>
@@ -286,18 +328,22 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                         <DialogContent>
                             <Box sx={{ mb: 3 }}>
                                 <Grid container spacing={2} sx={{ mb: 2 }}>
-                                    {selectedRecipe.prepTime && (
+                                    {selectedRecipe.prepTime !== undefined && (
                                         <Grid item xs={4}>
                                             <Typography variant="subtitle2">Tempo de Preparo</Typography>
                                             <Typography>{formatTime(selectedRecipe.prepTime)}</Typography>
                                         </Grid>
                                     )}
-                                    {selectedRecipe.cookTime && (
+                                    {selectedRecipe.cookTime !== undefined && (
                                         <Grid item xs={4}>
                                             <Typography variant="subtitle2">Tempo de Cozimento</Typography>
                                             <Typography>{formatTime(selectedRecipe.cookTime)}</Typography>
                                         </Grid>
                                     )}
+                                    <Grid item xs={4}>
+                                        <Typography variant="subtitle2">Tempo Total</Typography>
+                                        <Typography>{getTotalTime(selectedRecipe)}</Typography>
+                                    </Grid>
                                     {selectedRecipe.servings && (
                                         <Grid item xs={4}>
                                             <Typography variant="subtitle2">Porções</Typography>
