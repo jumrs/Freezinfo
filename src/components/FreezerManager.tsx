@@ -32,6 +32,7 @@ import { FoodItemForm } from './FoodItemForm';
 import { CategoryManager } from './CategoryManager';
 import { RecipeForm } from './RecipeForm';
 import { RecipeList } from './RecipeList';
+import { ShoppingList } from './ShoppingList';
 import { ColorModeContext } from '../App';
 
 export const FreezerManager: React.FC = () => {
@@ -213,6 +214,11 @@ export const FreezerManager: React.FC = () => {
 
             <Container maxWidth="lg" sx={{ mt: 4 }}>
                 <Grid container spacing={3}>
+                    {/* Shopping List Section */}
+                    <Grid item xs={12}>
+                        <ShoppingList />
+                    </Grid>
+
                     {/* Search and Filter Section */}
                     <Grid item xs={12}>
                         <Paper sx={{ p: 2 }}>

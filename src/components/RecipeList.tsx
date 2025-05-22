@@ -14,10 +14,15 @@ import {
     DialogActions,
     Button,
     Chip,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemIcon,
 } from '@mui/material';
-import { Search as SearchIcon, ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { Search as SearchIcon, ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon, ShoppingCart as ShoppingCartIcon, Add as AddIcon } from '@mui/icons-material';
 import { useRecipeStore } from '../store/recipeStore';
 import { useFreezerStore } from '../store/freezerStore';
+import { useShoppingListStore } from '../store/shoppingListStore';
 import { Recipe, Ingredient } from '../types';
 import { RecipeForm } from './RecipeForm';
 
@@ -49,7 +54,9 @@ const RecipeTimeChip: React.FC<{label: string; minutes?: number; variant?: "outl
     );
 };
 
-const IngredientListItem: React.FC<{ingredient: Ingredient; freezerItems: any[]}> = ({ingredient, freezerItems}) => {
+const IngredientListItem: React.FC<{ingredient: Ingredient; freezerItems: any[]; onAddToShoppingList: (ingredient: Ingredient) => void}> = 
+    ({ingredient, freezerItems, onAddToShoppingList}) => {
+    
     const { text, available } = formatIngredientWithAvailability(ingredient, freezerItems);
     
     return (
@@ -65,7 +72,18 @@ const IngredientListItem: React.FC<{ingredient: Ingredient; freezerItems: any[]}
             {available ? (
                 <CheckCircleIcon color="success" fontSize="small" />
             ) : (
-                <CancelIcon color="error" fontSize="small" />
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <CancelIcon color="error" fontSize="small" />
+                    <IconButton 
+                        size="small" 
+                        color="primary" 
+                        onClick={() => onAddToShoppingList(ingredient)}
+                        sx={{ ml: 0.5 }}
+                        title="Adicionar à Lista de Compras"
+                    >
+                        <AddIcon fontSize="small" />
+                    </IconButton>
+                </Box>
             )}
             <Typography>{text}</Typography>
         </Box>
@@ -139,6 +157,7 @@ const calculateTotalTime = (recipe: Recipe): number => {
 export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
     const { recipes, loading, setFilters, filteredRecipes, fetchRecipes, deleteRecipe } = useRecipeStore();
     const { items: freezerItems, fetchItems } = useFreezerStore();
+    const { addItem } = useShoppingListStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
@@ -193,6 +212,18 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
     const handleAddRecipe = () => {
         setSelectedRecipe(null);
         setIsRecipeFormOpen(true);
+    };
+
+    const handleAddToShoppingList = (ingredient: Ingredient) => {
+        if (ingredient.name) {
+            addItem({
+                name: ingredient.name,
+                quantity: ingredient.quantity,
+                unit: ingredient.unit,
+                checked: false
+            });
+            alert(`"${ingredient.name}" adicionado à lista de compras!`);
+        }
     };
 
     // Renderização dos Cards de Receita
@@ -392,14 +423,35 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                                     )}
                                 </Grid>
 
-                                {/* Lista de Ingredientes */}
-                                <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Ingredientes</Typography>
+                                {/* Lista de Ingredientes com opção de adicionar à lista de compras */}
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, mb: 1 }}>
+                                    <Typography variant="h6">Ingredientes</Typography>
+                                    <Button 
+                                        startIcon={<ShoppingCartIcon />}
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => {
+                                            if (window.confirm('Deseja adicionar todos os ingredientes indisponíveis à lista de compras?')) {
+                                                selectedRecipe.ingredients.forEach(ingredient => {
+                                                    const availability = checkIngredientAvailability(ingredient, freezerItems);
+                                                    if (!availability.available) {
+                                                        handleAddToShoppingList(ingredient);
+                                                    }
+                                                });
+                                                alert('Ingredientes adicionados à lista de compras!');
+                                            }
+                                        }}
+                                    >
+                                        Adicionar Indisponíveis
+                                    </Button>
+                                </Box>
                                 <Box component="ul" sx={{ pl: 2 }}>
                                     {selectedRecipe.ingredients.map((ingredient, index) => (
                                         <IngredientListItem 
                                             key={index} 
                                             ingredient={ingredient} 
                                             freezerItems={freezerItems} 
+                                            onAddToShoppingList={handleAddToShoppingList}
                                         />
                                     ))}
                                 </Box>

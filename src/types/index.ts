@@ -45,4 +45,14 @@ export interface Recipe {
     dateAdded: string;
     notes?: string;
     image?: string; // URL da imagem ou base64
+}
+
+export interface ShoppingListItem {
+    id: string;
+    name: string;
+    quantity?: number;
+    unit?: string;
+    checked: boolean;
+    dateAdded: string;
+    notes?: string;
 } 
