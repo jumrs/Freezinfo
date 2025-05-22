@@ -222,7 +222,6 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
                 unit: ingredient.unit,
                 checked: false
             });
-            alert(`"${ingredient.name}" adicionado à lista de compras!`);
         }
     };
 
