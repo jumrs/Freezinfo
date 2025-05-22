@@ -2,9 +2,10 @@
 
 Uma aplicação moderna para gerenciar o conteúdo do seu freezer, permitindo adicionar, remover, modificar e buscar itens de forma fácil e intuitiva através de uma interface touch screen.
 
+### [Vídeo demonstrando o Freezinfo e como foi gerado com Cursor:](https://youtu.be/MFmYm-2noWA)
+
 [![Watch the video](https://img.youtube.com/vi/MFmYm-2noWA/maxresdefault.jpg)](https://youtu.be/MFmYm-2noWA)
 
-### [Vídeo demonstrando o Freezinfo e como foi gerado com Cursor:](https://youtu.be/MFmYm-2noWA)
 
 ## Características
 
