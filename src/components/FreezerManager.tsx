@@ -22,13 +22,16 @@ import {
     Search as SearchIcon, 
     Settings as SettingsIcon,
     DarkMode as DarkModeIcon,
-    LightMode as LightModeIcon
+    LightMode as LightModeIcon,
+    MenuBook as MenuBookIcon
 } from '@mui/icons-material';
 import { useFreezerStore } from '../store/freezerStore';
 import { useCategoryStore } from '../store/categoryStore';
 import { FoodItem } from '../types';
 import { FoodItemForm } from './FoodItemForm';
 import { CategoryManager } from './CategoryManager';
+import { RecipeForm } from './RecipeForm';
+import { RecipeList } from './RecipeList';
 import { ColorModeContext } from '../App';
 
 export const FreezerManager: React.FC = () => {
@@ -38,6 +41,8 @@ export const FreezerManager: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>(lastSelectedCategory);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+    const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
+    const [showRecipeList, setShowRecipeList] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<FoodItem | undefined>(undefined);
     const [showResults, setShowResults] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -84,6 +89,22 @@ export const FreezerManager: React.FC = () => {
         setIsAddDialogOpen(true);
     };
 
+    const handleOpenRecipeForm = () => {
+        setIsRecipeFormOpen(true);
+    };
+
+    const handleCloseRecipeForm = () => {
+        setIsRecipeFormOpen(false);
+    };
+
+    const handleOpenRecipeList = () => {
+        setShowRecipeList(true);
+    };
+
+    const handleCloseRecipeList = () => {
+        setShowRecipeList(false);
+    };
+
     // Pegar os 5 itens mais recentes
     const recentItems = [...items]
         .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
@@ -108,6 +129,10 @@ export const FreezerManager: React.FC = () => {
         handleSettingsClose();
     };
 
+    if (showRecipeList) {
+        return <RecipeList onBack={handleCloseRecipeList} />;
+    }
+
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="static">
@@ -122,6 +147,16 @@ export const FreezerManager: React.FC = () => {
                             sx={{ mr: 1, p: 1.5 }}
                         >
                             {colorMode.mode === 'dark' ? <LightModeIcon fontSize="large" /> : <DarkModeIcon fontSize="large" />}
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Receitas">
+                        <IconButton 
+                            color="inherit" 
+                            aria-label="receitas"
+                            onClick={handleOpenRecipeList}
+                            sx={{ mr: 1, p: 1.5 }}
+                        >
+                            <MenuBookIcon fontSize="large" />
                         </IconButton>
                     </Tooltip>
                     <IconButton 
@@ -169,6 +204,11 @@ export const FreezerManager: React.FC = () => {
             <CategoryManager
                 open={isCategoryManagerOpen}
                 onClose={() => setIsCategoryManagerOpen(false)}
+            />
+
+            <RecipeForm
+                open={isRecipeFormOpen}
+                onClose={handleCloseRecipeForm}
             />
 
             <Container maxWidth="lg" sx={{ mt: 4 }}>

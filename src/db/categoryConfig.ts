@@ -2,7 +2,7 @@ import { FoodCategory } from '../types';
 
 const DB_NAME = 'freezerDB';
 const STORE_NAME = 'categories';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let db: IDBDatabase | null = null;
 
@@ -39,6 +39,11 @@ export async function initializeCategoryDatabase(): Promise<void> {
                 defaultCategories.forEach(category => {
                     store.add(category);
                 });
+            }
+            
+            // Criar ou manter a store de receitas
+            if (!db.objectStoreNames.contains('recipes')) {
+                db.createObjectStore('recipes', { keyPath: 'id' });
             }
         };
     });

@@ -26,4 +26,17 @@ export interface SearchFilters {
     category?: string;
     searchTerm?: string;
     drawer?: number;
+}
+
+export interface Recipe {
+    id: string;
+    name: string;
+    ingredients: string[];
+    instructions: string;
+    prepTime?: number; // em minutos
+    cookTime?: number; // em minutos
+    servings?: number;
+    dateAdded: string;
+    notes?: string;
+    image?: string; // URL da imagem ou base64
 } 
