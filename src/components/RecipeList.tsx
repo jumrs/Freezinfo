@@ -16,9 +16,10 @@ import {
     Chip,
     Divider
 } from '@mui/material';
-import { Search as SearchIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Search as SearchIcon, ArrowBack as ArrowBackIcon, CheckCircle as CheckCircleIcon, Cancel as CancelIcon } from '@mui/icons-material';
 import { useRecipeStore } from '../store/recipeStore';
-import { Recipe } from '../types';
+import { useFreezerStore } from '../store/freezerStore';
+import { Recipe, Ingredient } from '../types';
 import { RecipeForm } from './RecipeForm';
 
 interface RecipeListProps {
@@ -27,6 +28,7 @@ interface RecipeListProps {
 
 export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
     const { recipes, loading, setFilters, filteredRecipes, fetchRecipes, deleteRecipe } = useRecipeStore();
+    const { items: freezerItems } = useFreezerStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [isRecipeFormOpen, setIsRecipeFormOpen] = useState(false);
@@ -90,19 +92,52 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
         return formatTime(prepTime + cookTime);
     };
 
-    // Formata o ingrediente com quantidade e unidade
+    const checkIngredientAvailability = (ingredient: Ingredient) => {
+        const freezerItem = freezerItems.find(item => 
+            item.name.toLowerCase() === ingredient.name.toLowerCase()
+        );
+
+        if (!freezerItem) {
+            return {
+                available: false,
+                freezerQuantity: 0,
+                recipeQuantity: ingredient.quantity || 0
+            };
+        }
+
+        return {
+            available: ingredient.quantity ? freezerItem.quantity >= ingredient.quantity : true,
+            freezerQuantity: freezerItem.quantity,
+            recipeQuantity: ingredient.quantity || 0
+        };
+    };
+
+    // Modifica a função formatIngredient para incluir a disponibilidade
     const formatIngredient = (ingredient: Recipe['ingredients'][0]) => {
         const { name, quantity, unit } = ingredient;
+        const availability = checkIngredientAvailability(ingredient);
         
+        let baseText = '';
         if (quantity && unit) {
-            return `${quantity} ${unit} de ${name}`;
+            baseText = `${quantity} ${unit} de ${name}`;
         } else if (quantity) {
-            return `${quantity} ${name}`;
+            baseText = `${quantity} ${name}`;
         } else if (unit) {
-            return `${unit} de ${name}`;
+            baseText = `${unit} de ${name}`;
+        } else {
+            baseText = name;
         }
-        
-        return name;
+
+        const availabilityText = quantity 
+            ? ` (${availability.freezerQuantity}/${quantity})`
+            : availability.freezerQuantity > 0 
+                ? ` (Disponível: ${availability.freezerQuantity})`
+                : ' (Não disponível)';
+
+        return {
+            text: baseText + availabilityText,
+            available: availability.available
+        };
     };
 
     return (
@@ -273,11 +308,28 @@ export const RecipeList: React.FC<RecipeListProps> = ({ onBack }) => {
 
                                 <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Ingredientes</Typography>
                                 <Box component="ul" sx={{ pl: 2 }}>
-                                    {selectedRecipe.ingredients.map((ingredient, index) => (
-                                        <Typography component="li" key={index} sx={{ mb: 0.5 }}>
-                                            {formatIngredient(ingredient)}
-                                        </Typography>
-                                    ))}
+                                    {selectedRecipe.ingredients.map((ingredient, index) => {
+                                        const { text, available } = formatIngredient(ingredient);
+                                        return (
+                                            <Box 
+                                                component="li" 
+                                                key={index} 
+                                                sx={{ 
+                                                    mb: 0.5,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 1
+                                                }}
+                                            >
+                                                {available ? (
+                                                    <CheckCircleIcon color="success" fontSize="small" />
+                                                ) : (
+                                                    <CancelIcon color="error" fontSize="small" />
+                                                )}
+                                                <Typography>{text}</Typography>
+                                            </Box>
+                                        );
+                                    })}
                                 </Box>
 
                                 <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Instruções</Typography>
